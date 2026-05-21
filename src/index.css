@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&display=swap');
+
+:root {
+  --bg: #F5F0E8;
+  --surface: #FFFFFF;
+  --border: #E8E4DC;
+  --border-strong: #D9D4CA;
+  --accent: #FF4D1C;
+  --accent-tint-bg: #FFF3EE;
+  --accent-tint-border: #FFD9CC;
+  --accent-tint-bg-soft: #FFFAF6;
+  --text: #1A1A1A;
+  --text-soft: #4A4844;
+  --muted: #999690;
+  --muted-2: #BFBAB1;
+
+  --radius-sm: 7px;
+  --radius: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+  --radius-cover: 4px;
+
+  --font-ui: "Geist", "Inter Tight", -apple-system, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-editorial: "Fraunces", Georgia, serif;
+
+  --shadow-cover: 0 1px 0 rgba(0,0,0,0.08), 0 4px 10px -4px rgba(0,0,0,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100dvh;
+}
+
+#root { min-height: 100dvh; background: var(--bg); }
+
+h1,h2,h3,h4 { font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin: 0; }
+
+.label-upper {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+input, button { font-family: var(--font-ui); }

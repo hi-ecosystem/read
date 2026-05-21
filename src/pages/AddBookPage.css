@@ -1,0 +1,23 @@
+.add-page { background: var(--bg); min-height: 100dvh; }
+.add-search-wrap { padding: 0 16px 12px; }
+.add-search { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0 14px; height: 44px; }
+.add-search__input { flex: 1; border: none; outline: none; background: transparent; font-size: 14px; color: var(--text); font-family: var(--font-ui); }
+.add-search__input::placeholder { color: var(--muted); }
+.add-search__source { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.add-meta { padding: 0 20px 8px; }
+.add-results { display: flex; flex-direction: column; }
+.add-result-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; background: var(--surface); transition: background 120ms; }
+.add-result-row.expanded { background: var(--accent-tint-bg); border-bottom: 1px solid #FFE0D2; }
+.add-result-row__meta { flex: 1; min-width: 0; }
+.add-result-row__title { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.add-result-row__sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.icon-btn-sm { width: 32px; height: 32px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); flex-shrink: 0; }
+.icon-btn-sm.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+.add-expand { background: var(--accent-tint-bg-soft); padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.add-duo-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px dashed var(--border-strong); border-radius: 10px; cursor: pointer; }
+.add-duo-row__icon { width: 32px; height: 32px; border-radius: 8px; background: var(--accent-tint-bg); display: flex; align-items: center; justify-content: center; }
+.add-cancel { background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer; font-family: var(--font-ui); padding: 6px; }
+.add-skeleton { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.skeleton-cover { width: 44px; height: 66px; border-radius: 4px; background: var(--border); flex-shrink: 0; animation: pulse 1.4s ease-in-out infinite; }
+.skeleton-line { height: 12px; border-radius: 6px; background: var(--border); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }

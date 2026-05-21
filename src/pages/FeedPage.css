@@ -1,0 +1,24 @@
+.feed-page { background: var(--bg); min-height: 100dvh; }
+.feed-loading { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+.feed-skeleton { height: 120px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); animation: pulse 1.4s ease-in-out infinite; }
+.feed-empty { padding: 48px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.feed-filters { display: flex; gap: 6px; padding: 0 20px 14px; overflow-x: auto; scrollbar-width: none; }
+.feed-filters::-webkit-scrollbar { display: none; }
+.feed-list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+
+.feed-card { padding: 14px; }
+.feed-card--compact .feed-card__row { display: flex; align-items: center; gap: 12px; }
+.feed-card__header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.feed-card__name { font-size: 14px; font-weight: 600; color: var(--text); }
+.feed-card__action { font-size: 14px; color: var(--muted); }
+.feed-card__meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.feed-card__body { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.feed-card__quote { font-family: var(--font-editorial); font-style: italic; font-size: 15px; line-height: 1.35; color: var(--text-soft); margin-top: 8px; }
+.feed-card__divider { height: 1px; background: var(--border-strong); border-style: dashed; margin: 0 -14px 10px; border-top: 1px dashed var(--border-strong); }
+.feed-card__social { display: flex; align-items: center; justify-content: space-between; }
+.feed-card__want { font-size: 12px; color: var(--muted); }
+.social-btn { display: flex; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 12px; padding: 4px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.icon-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); }
