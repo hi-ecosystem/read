@@ -5,21 +5,27 @@ import TopBar from '../components/TopBar';
 import BookCover from '../components/BookCover';
 import Chip from '../components/Chip';
 import { searchBooks } from '../services/openLibrary';
-import { addBookToShelf } from '../services/readApi';
+import { addBookToShelf, getMyShelf } from '../services/readApi';
+import { useLang } from '../context/LangContext';
 import './AddBookPage.css';
 
 const SHELVES = ['reading', 'finished', 'want'];
-const SHELF_LABELS = { reading: 'Reading', finished: 'Finished', want: 'Want to read' };
 
 export default function AddBookPage() {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [query, setQuery]           = useState('');
   const [results, setResults]       = useState([]);
   const [loading, setLoading]       = useState(false);
   const [expanded, setExpanded]     = useState(null);
   const [selectedShelf, setSelectedShelf] = useState('reading');
   const [saving, setSaving]         = useState(false);
+  const [shelfIds, setShelfIds]     = useState(new Set());
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    getMyShelf().then(all => setShelfIds(new Set(all.map(b => b.book_id)))).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!query.trim()) { setResults([]); return; }
@@ -37,10 +43,10 @@ export default function AddBookPage() {
     setSaving(true);
     try {
       await addBookToShelf(book, shelf);
-      toast.success(`Added to ${SHELF_LABELS[shelf]}`);
+      toast.success(t('addSuccess', t(`shelf${shelf.charAt(0).toUpperCase() + shelf.slice(1)}`)));
       navigate('/shelf');
     } catch (e) {
-      toast.error('Could not save. Try again.');
+      toast.error(t('addError'));
       console.error(e);
     } finally {
       setSaving(false);
@@ -50,10 +56,10 @@ export default function AddBookPage() {
   return (
     <div className="add-page">
       <TopBar
-        title="Add a book"
+        title={t('addTitle')}
         onBack={() => navigate(-1)}
         trailing={
-          <button className="add-cancel" onClick={() => navigate(-1)}>Cancel</button>
+          <button className="add-cancel" onClick={() => navigate(-1)}>{t('cancel')}</button>
         }
       />
 
@@ -64,7 +70,7 @@ export default function AddBookPage() {
           </svg>
           <input
             className="add-search__input"
-            placeholder="Title, author…"
+            placeholder={t('addSearchPlaceholder')}
             value={query}
             onChange={e => setQuery(e.target.value)}
             autoFocus
@@ -76,7 +82,7 @@ export default function AddBookPage() {
       {query.trim() && (
         <div className="add-meta">
           <span className="label-upper">
-            {loading ? 'searching…' : `${results.length} results`}
+            {loading ? t('addSearching') : t('addResults', results.length)}
           </span>
         </div>
       )}
@@ -84,11 +90,12 @@ export default function AddBookPage() {
       <div className="add-results">
         {results.map(book => {
           const isExp = expanded === book.id;
+          const onShelf = shelfIds.has(book.id);
           return (
             <div key={book.id}>
               <div
                 className={`add-result-row ${isExp ? 'expanded' : ''}`}
-                onClick={() => setExpanded(isExp ? null : book.id)}
+                onClick={() => !onShelf && setExpanded(isExp ? null : book.id)}
               >
                 <BookCover
                   title={book.title} author={book.author} coverUrl={book.coverUrl}
@@ -99,25 +106,30 @@ export default function AddBookPage() {
                   <div className="add-result-row__sub">
                     {book.author}{book.year ? ` · ${book.year}` : ''}{book.pages ? ` · ${book.pages}p` : ''}
                   </div>
+                  {onShelf && (
+                    <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginTop: 3 }}>{t('onShelf')}</div>
+                  )}
                 </div>
-                <button
-                  className={`icon-btn-sm ${isExp ? 'accent' : ''}`}
-                  aria-label="Add book"
-                  disabled={saving}
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleAdd(book, selectedShelf);
-                  }}
-                >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" viewBox="0 0 16 16">
-                    <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
-                  </svg>
-                </button>
+                {!onShelf && (
+                  <button
+                    className={`icon-btn-sm ${isExp ? 'accent' : ''}`}
+                    aria-label="Add book"
+                    disabled={saving}
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleAdd(book, selectedShelf);
+                    }}
+                  >
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" viewBox="0 0 16 16">
+                      <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {isExp && (
                 <div className="add-expand">
-                  <div className="label-upper" style={{ marginBottom: 10 }}>Add to shelf</div>
+                  <div className="label-upper" style={{ marginBottom: 10 }}>{t('addToShelfLabel')}</div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
                     {SHELVES.map(s => (
                       <Chip
@@ -125,12 +137,12 @@ export default function AddBookPage() {
                         variant={selectedShelf === s ? 'accent' : 'default'}
                         onClick={() => setSelectedShelf(s)}
                       >
-                        {selectedShelf === s && '✓ '}{SHELF_LABELS[s]}
+                        {selectedShelf === s && '✓ '}{t(`shelf${s.charAt(0).toUpperCase() + s.slice(1)}`)}
                       </Chip>
                     ))}
                   </div>
 
-                  <div className="add-duo-row" onClick={() => toast('Duo invite coming soon!')}>
+                  <div className="add-duo-row" onClick={() => toast(t('commingSoon'))}>
                     <div className="add-duo-row__icon">
                       <svg width="16" height="16" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 16 16">
                         <rect x="2" y="2" width="5" height="5" rx="1"/>
@@ -140,8 +152,8 @@ export default function AddBookPage() {
                       </svg>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>Read this as a duo?</div>
-                      <div style={{ fontSize: 11, color: 'var(--muted)' }}>Invite a friend · DoubleDo check-ins</div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{t('duoInvite')}</div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)' }}>{t('duoInviteSub')}</div>
                     </div>
                     <svg width="16" height="16" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" viewBox="0 0 16 16">
                       <polyline points="6,4 10,8 6,12"/>
@@ -154,7 +166,7 @@ export default function AddBookPage() {
                     disabled={saving}
                     onClick={() => handleAdd(book, selectedShelf)}
                   >
-                    {saving ? 'Saving…' : `Add to ${SHELF_LABELS[selectedShelf]}`}
+                    {saving ? t('saving') : t('addToShelf', t(`shelf${selectedShelf.charAt(0).toUpperCase() + selectedShelf.slice(1)}`))}
                   </button>
                 </div>
               )}
@@ -174,7 +186,7 @@ export default function AddBookPage() {
 
         {!loading && query.trim() && results.length === 0 && (
           <div style={{ padding: '20px 16px', color: 'var(--muted)', fontSize: 13, textAlign: 'center' }}>
-            No results — try the title or author.
+            {t('addNoResultsHint')}
           </div>
         )}
       </div>

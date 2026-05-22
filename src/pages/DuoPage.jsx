@@ -6,22 +6,23 @@ import Avatar from '../components/Avatar';
 import BookCover from '../components/BookCover';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LangContext';
 import { supabase } from '../services/supabase';
 import { getMyDuos, getDuo, getFriends, createDuo, sendDuoMessage, endDuo, getMyShelf, logPages } from '../services/readApi';
 import { coverUrl } from '../services/openLibrary';
 import './DuoPage.css';
 
-function timeAgo(ts) {
+function timeAgoI18n(ts, t) {
   if (!ts) return '';
   const diff = (Date.now() - new Date(ts)) / 1000;
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60)    return t('timeJustNow');
+  if (diff < 3600)  return t('timeMinAgo',  Math.floor(diff / 60));
+  if (diff < 86400) return t('timeHourAgo', Math.floor(diff / 3600));
+  return t('timeDayAgo', Math.floor(diff / 86400));
 }
 
 /* ─── Create Duo Flow ────────────────────────────────── */
-function CreateDuoFlow({ onClose, onCreated }) {
+function CreateDuoFlow({ onClose, onCreated, t }) {
   const [step, setStep] = useState('book'); // 'book' | 'friend' | 'confirm'
   const [books, setBooks] = useState([]);
   const [friends, setFriends] = useState([]);
@@ -53,10 +54,10 @@ function CreateDuoFlow({ onClose, onCreated }) {
     setSaving(true);
     try {
       const duoId = await createDuo(book.book_id, friend.id);
-      toast.success('Duo started!');
+      toast.success(t('duoToastStarted'));
       onCreated(duoId);
     } catch (e) {
-      toast.error(e.message || 'Could not create duo');
+      toast.error(e.message || t('addError'));
       setSaving(false);
     }
   };
@@ -64,7 +65,7 @@ function CreateDuoFlow({ onClose, onCreated }) {
   return (
     <div className="duo-page">
       <TopBar
-        title={step === 'book' ? 'Pick a book' : step === 'friend' ? 'Pick a friend' : 'Start duo'}
+        title={step === 'book' ? t('duoPickBook') : step === 'friend' ? t('duoPickFriend') : t('duoStartTitle')}
         onBack={step === 'book' ? onClose : () => setStep(step === 'friend' ? 'book' : 'friend')}
       />
 
@@ -72,10 +73,10 @@ function CreateDuoFlow({ onClose, onCreated }) {
       {step === 'book' && (
         <div style={{ padding: '0 16px' }}>
           {loadingBooks ? (
-            <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Loading…</div>
+            <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('loading')}</div>
           ) : books.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-              Add books to your shelf first.
+              {t('duoAddBooksFirst')}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -109,10 +110,10 @@ function CreateDuoFlow({ onClose, onCreated }) {
           </div>
 
           {loadingFriends ? (
-            <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Loading…</div>
+            <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('loading')}</div>
           ) : friends.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-              No friends yet.<br/>Add friends to start a duo.
+              {t('duoNoFriends').split('\n').map((line, i) => <span key={i}>{line}{i === 0 && <br/>}</span>)}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -142,13 +143,13 @@ function CreateDuoFlow({ onClose, onCreated }) {
               <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>{book.author}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Avatar name={friend.username} size={28} />
-                <span style={{ fontSize: 13, fontWeight: 600 }}>with {friend.username}</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{t('duoWith')} {friend.username}</span>
               </div>
             </div>
           </div>
 
           <p style={{ fontSize: 13, color: 'var(--muted)', margin: '12px 0 16px', lineHeight: 1.5 }}>
-            The book will be added to {friend.username}'s shelf automatically. You'll both share progress, streaks and margin notes.
+            {t('duoConfirmSub', friend.username)}
           </p>
 
           <button
@@ -157,7 +158,7 @@ function CreateDuoFlow({ onClose, onCreated }) {
             disabled={saving}
             onClick={handleCreate}
           >
-            {saving ? 'Starting…' : 'Start reading together'}
+            {saving ? t('duoStarting') : t('duoStartBtn')}
           </button>
         </div>
       )}
@@ -168,7 +169,7 @@ function CreateDuoFlow({ onClose, onCreated }) {
 }
 
 /* ─── Duo Detail ─────────────────────────────────────── */
-function DuoDetail({ duoId, myId, onBack }) {
+function DuoDetail({ duoId, myId, onBack, t }) {
   const navigate = useNavigate();
   const [duo, setDuo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -211,7 +212,7 @@ function DuoDetail({ duoId, myId, onBack }) {
       setPageInput('');
       setShowPageInput(false);
       reload();
-    } catch { toast.error('Could not update'); }
+    } catch { toast.error(t('addError')); }
     finally { setUpdatingPage(false); }
   };
 
@@ -219,10 +220,10 @@ function DuoDetail({ duoId, myId, onBack }) {
     setEnding(true);
     try {
       await endDuo(duoId);
-      toast.success('Duo ended');
+      toast.success(t('duoToastEnded'));
       onBack();
     } catch (e) {
-      toast.error(e.message || 'Could not end duo');
+      toast.error(e.message || t('addError'));
       setEnding(false);
     }
   };
@@ -235,14 +236,14 @@ function DuoDetail({ duoId, myId, onBack }) {
       setMsg('');
       reload();
     } catch {
-      toast.error('Could not send');
+      toast.error(t('addError'));
     } finally {
       setSending(false);
     }
   };
 
-  if (loading) return <div className="duo-page"><TopBar title="Duo" onBack={onBack} /><div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Loading…</div></div>;
-  if (!duo) return <div className="duo-page"><TopBar title="Duo" onBack={onBack} /><div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Not found.</div></div>;
+  if (loading) return <div className="duo-page"><TopBar title="Duo" onBack={onBack} /><div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>{t('loading')}</div></div>;
+  if (!duo) return <div className="duo-page"><TopBar title="Duo" onBack={onBack} /><div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>{t('duoNotFound')}</div></div>;
 
   const pages = duo.pages ?? 1;
   const myPage = duo.my_page ?? 0;
@@ -265,9 +266,9 @@ function DuoDetail({ duoId, myId, onBack }) {
             background: 'var(--surface)', borderRadius: '20px 20px 0 0',
             padding: '24px 20px 40px', width: '100%', maxWidth: 480,
           }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>End this duo?</div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>{t('duoEndTitle')}</div>
             <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20, lineHeight: 1.5 }}>
-              The reading history and notes will be kept, but you won't be able to add new progress.
+              {t('duoEndSub')}
             </div>
             <button
               className="btn"
@@ -275,14 +276,14 @@ function DuoDetail({ duoId, myId, onBack }) {
               onClick={handleEnd}
               style={{ width: '100%', background: '#e53', color: '#fff', marginBottom: 10 }}
             >
-              {ending ? 'Ending…' : 'End duo'}
+              {ending ? t('duoEnding') : t('duoEndBtn')}
             </button>
             <button
               className="btn"
               onClick={() => setConfirmEnd(false)}
               style={{ width: '100%', background: 'var(--border)', color: 'var(--text)' }}
             >
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </div>
@@ -304,14 +305,14 @@ function DuoDetail({ duoId, myId, onBack }) {
               onClick={() => { setShowMenu(false); setConfirmEnd(true); }}
               style={{ width: '100%', background: 'var(--border)', color: '#e53' }}
             >
-              End duo
+              {t('duoEndBtn')}
             </button>
           </div>
         </div>
       )}
 
       <TopBar
-        title={`Вы & ${duo.partner_username ?? 'партнёр'}`}
+        title={`${t('duoYou')} & ${duo.partner_username ?? t('duoPartner')}`}
         onBack={onBack}
         trailing={
           <button className="icon-btn" onClick={() => setShowMenu(true)}>
@@ -325,17 +326,17 @@ function DuoDetail({ duoId, myId, onBack }) {
       <div className="duo-hero">
         <BookCover title={duo.title} author={duo.author} coverUrl={url} width={78} height={116} />
         <div className="duo-hero__meta">
-          <div className="label-upper">Reading together</div>
+          <div className="label-upper">{t('duoReadingTogether')}</div>
           <div style={{ fontFamily: 'var(--font-editorial)', fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', margin: '4px 0' }}>{duo.title}</div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-            {duo.started_at ? `started ${new Date(duo.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
-            {duo.pages ? ` · ${duo.pages} pages` : ''}
+            {duo.started_at ? t('duoStartedDate', new Date(duo.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ''}
+            {duo.pages ? ` · ${t('duoPages', duo.pages)}` : ''}
           </div>
           {duo.streak > 0 && (
             <div className="duo-streak">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--accent)"><path d="M8 1C5 4 3 6 3 9a5 5 0 0 0 10 0c0-2-1-4-2-5-1 2-2 3-3 2.5C7 5 8 1 8 1z"/></svg>
               <span className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{duo.streak}</span>
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>day streak</span>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('duoDayStreak')}</span>
             </div>
           )}
         </div>
@@ -345,8 +346,8 @@ function DuoDetail({ duoId, myId, onBack }) {
         <div className="duo-progress__cols">
           <div className="duo-col">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-              <Avatar name="You" size={24} />
-              <span style={{ fontSize: 12, fontWeight: 600 }}>You</span>
+              <Avatar name={t('duoYou')} size={24} />
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{t('duoYou')}</span>
             </div>
             {showPageInput ? (
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
@@ -357,14 +358,14 @@ function DuoDetail({ duoId, myId, onBack }) {
                   autoFocus placeholder={String(myPage)}
                   style={{ width: 64, padding: '4px 8px', fontSize: 16, fontFamily: 'var(--font-mono)', fontWeight: 500, border: '1px solid var(--accent)', borderRadius: 8, background: 'var(--bg)', color: 'var(--text)', outline: 'none' }}
                 />
-                <button onClick={handleUpdatePage} disabled={updatingPage} style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{updatingPage ? '…' : 'Save'}</button>
+                <button onClick={handleUpdatePage} disabled={updatingPage} style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{updatingPage ? '…' : t('duoSave')}</button>
                 <button onClick={() => { setShowPageInput(false); setPageInput(''); }} style={{ fontSize: 12, color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>✕</button>
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span className="mono" style={{ fontSize: 22, fontWeight: 500 }}>{myPage}</span>
                 <span className="mono" style={{ fontSize: 12, color: 'var(--muted)' }}>/ {pages}</span>
-                <button onClick={() => { setShowPageInput(true); setPageInput(String(myPage)); }} style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', fontFamily: 'var(--font-ui)' }}>update</button>
+                <button onClick={() => { setShowPageInput(true); setPageInput(String(myPage)); }} style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', fontFamily: 'var(--font-ui)' }}>{t('duoUpdate')}</button>
               </div>
             )}
             <ProgressBar value={myPct} height={6} duo={true} style={{ margin: '6px 0' }} />
@@ -375,7 +376,7 @@ function DuoDetail({ duoId, myId, onBack }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
               <button style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => duo.partner_username && navigate(`/user/${duo.partner_username}`)}>
               <Avatar name={duo.partner_username ?? '?'} size={24} />
-              <span style={{ fontSize: 12, fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--border)' }}>{duo.partner_username ?? 'Партнёр'}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--border)' }}>{duo.partner_username ?? t('duoPartner')}</span>
             </button>
             </div>
             <div><span className="mono" style={{ fontSize: 22, fontWeight: 500 }}>{partnerPage}</span><span className="mono" style={{ fontSize: 12, color: 'var(--muted)' }}> / {pages}</span></div>
@@ -387,8 +388,8 @@ function DuoDetail({ duoId, myId, onBack }) {
 
       <div style={{ padding: '0 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Margin notes</span>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{messages.length} notes</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{t('duoMarginNotes')}</span>
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('duoNotesCount', messages.length)}</span>
         </div>
 
         {messages.length > 0 && (
@@ -398,7 +399,7 @@ function DuoDetail({ duoId, myId, onBack }) {
                 <Avatar name={m.username} size={24} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{m.user_id === myId ? 'You' : m.username}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{m.user_id === myId ? t('duoYou') : m.username}</span>
                     <span className="mono" style={{ fontSize: 10, color: 'var(--muted)' }}>
                       {m.page ? `p. ${m.page} · ` : ''}{timeAgo(m.created_at)}
                     </span>
@@ -413,7 +414,7 @@ function DuoDetail({ duoId, myId, onBack }) {
         <div className="duo-compose">
           <input
             className="duo-compose__input"
-            placeholder="Leave a margin note…"
+            placeholder={t('duoComposePlaceholder')}
             value={msg}
             onChange={e => setMsg(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
@@ -432,13 +433,13 @@ function DuoDetail({ duoId, myId, onBack }) {
 }
 
 /* ─── Duo List ───────────────────────────────────────── */
-function DuoList({ duos, myId, onSelect, onCreate }) {
+function DuoList({ duos, myId, onSelect, onCreate, t }) {
   return (
     <div className="duo-page">
       <TopBar
-        title="Дуо"
+        title={t('duoTitle')}
         trailing={
-          <button className="icon-btn" onClick={onCreate} aria-label="Новое дуо">
+          <button className="icon-btn" onClick={onCreate} aria-label={t('duoNewBtn')}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" viewBox="0 0 18 18">
               <line x1="9" y1="3" x2="9" y2="15"/><line x1="3" y1="9" x2="15" y2="9"/>
             </svg>
@@ -463,9 +464,9 @@ function DuoList({ duos, myId, onSelect, onCreate }) {
                 width={44} height={66}
               />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{duo.books?.title ?? 'Книга'}</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{duo.books?.title ?? '—'}</div>
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
-                  с {partner?.username ?? 'партнёром'}
+                  {t('duoWith')} {partner?.username ?? t('duoPartner')}
                 </div>
               </div>
               <svg width="16" height="16" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" viewBox="0 0 16 16">
@@ -483,6 +484,7 @@ function DuoList({ duos, myId, onSelect, onCreate }) {
 /* ─── Main ───────────────────────────────────────────── */
 export default function DuoPage() {
   const { user } = useAuth();
+  const { t } = useLang();
   const [duos, setDuos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null); // duo id
@@ -504,37 +506,38 @@ export default function DuoPage() {
       <CreateDuoFlow
         onClose={() => setCreating(false)}
         onCreated={duoId => { setCreating(false); setSelected(duoId); loadDuos(true); }}
+        t={t}
       />
     );
   }
 
   if (loading) return (
     <div className="duo-page">
-      <TopBar title="Дуо" />
-      <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Загрузка…</div>
+      <TopBar title={t('duoTitle')} />
+      <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('loading')}</div>
     </div>
   );
 
-  if (selected) return <DuoDetail duoId={selected} myId={user?.id} onBack={() => setSelected(null)} />;
+  if (selected) return <DuoDetail duoId={selected} myId={user?.id} onBack={() => setSelected(null)} t={t} />;
 
   if (duos.length > 0) return (
-    <DuoList duos={duos} myId={user?.id} onSelect={setSelected} onCreate={() => setCreating(true)} />
+    <DuoList duos={duos} myId={user?.id} onSelect={setSelected} onCreate={() => setCreating(true)} t={t} />
   );
 
   // No duos — empty state
   return (
     <div className="duo-page">
-      <TopBar title="Дуо" />
+      <TopBar title={t('duoTitle')} />
       <div className="duo-empty">
         <div className="duo-empty__icon">
           <svg width="40" height="40" fill="none" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 40 40">
             <circle cx="15" cy="20" r="10"/><circle cx="25" cy="20" r="10"/>
           </svg>
         </div>
-        <div className="duo-empty__title">Нет активных дуо</div>
-        <div className="duo-empty__sub">Читайте книгу вместе с другом — общий прогресс, стрики и заметки на полях.</div>
+        <div className="duo-empty__title">{t('duoEmpty')}</div>
+        <div className="duo-empty__sub">{t('duoReadingTogether')} — {t('duoMarginNotes').toLowerCase()}.</div>
         <button className="btn btn-primary duo-empty__btn" onClick={() => setCreating(true)}>
-          Начать дуо
+          {t('duoNewBtn')}
         </button>
       </div>
     </div>

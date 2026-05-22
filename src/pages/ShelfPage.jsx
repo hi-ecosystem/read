@@ -7,15 +7,8 @@ import ProgressBar from '../components/ProgressBar';
 import StarRating from '../components/StarRating';
 import { getMyShelf, logPages, moveShelf, finishBook, removeFromShelf, upsertReview, getMyReview } from '../services/readApi';
 import { coverUrl } from '../services/openLibrary';
+import { useLang } from '../context/LangContext';
 import './ShelfPage.css';
-
-const TABS = [
-  { id: 'reading',  label: 'Reading' },
-  { id: 'finished', label: 'Finished' },
-  { id: 'want',     label: 'Want' },
-];
-
-const SHELF_LABELS = { reading: 'Reading', finished: 'Finished', want: 'Want to read' };
 
 /* ── Bottom sheet wrapper ── */
 function Sheet({ onClose, children }) {
@@ -51,7 +44,17 @@ function SheetBtn({ label, sub, danger, onClick, disabled }) {
   );
 }
 
+function timeAgoI18n(ts, t) {
+  if (!ts) return '';
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60)    return t('timeJustNow');
+  if (diff < 3600)  return t('timeMinAgo',  Math.floor(diff / 60));
+  if (diff < 86400) return t('timeHourAgo', Math.floor(diff / 3600));
+  return t('timeDayAgo', Math.floor(diff / 86400));
+}
+
 export default function ShelfPage() {
+  const { t } = useLang();
   const [tab, setTab]     = useState('reading');
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,7 +141,7 @@ export default function ShelfPage() {
       setCounts(prev => markFinished
         ? { ...prev, reading: prev.reading - 1, finished: prev.finished + 1 }
         : prev);
-      toast.success(markFinished ? '🎉 Book finished!' : 'Progress saved!');
+      toast.success(markFinished ? t('toastFinished') : t('toastProgress'));
       closeLog();
     } catch (e) {
       toast.error(e.message || 'Could not save');
@@ -165,7 +168,7 @@ export default function ShelfPage() {
     setSavingReview(true);
     try {
       await upsertReview(reviewBook.book_id, rating, reviewBody.trim());
-      toast.success('Review saved!');
+      toast.success(t('reviewSave'));
       closeReview();
     } catch (e) {
       toast.error(e.message || 'Could not save');
@@ -189,7 +192,7 @@ export default function ShelfPage() {
         const from = actionBook.shelf;
         return { ...prev, [from]: prev[from] - 1, [shelf]: prev[shelf] + 1 };
       });
-      toast.success(`Moved to ${SHELF_LABELS[shelf]}`);
+      toast.success(t('toastMoved', t(`shelf${shelf.charAt(0).toUpperCase() + shelf.slice(1)}`)));
       closeActions();
     } catch (e) { toast.error(e.message); }
     finally { setActionLoading(false); }
@@ -201,7 +204,7 @@ export default function ShelfPage() {
       await finishBook(actionBook.book_id);
       setBooks(prev => prev.map(b => b.book_id === actionBook.book_id ? { ...b, shelf: 'finished' } : b));
       setCounts(prev => ({ ...prev, reading: prev.reading - 1, finished: prev.finished + 1 }));
-      toast.success('🎉 Book finished!');
+      toast.success(t('toastFinished'));
       closeActions();
     } catch (e) { toast.error(e.message); }
     finally { setActionLoading(false); }
@@ -214,7 +217,7 @@ export default function ShelfPage() {
       const removed = actionBook;
       setBooks(prev => prev.filter(b => b.book_id !== removed.book_id));
       setCounts(prev => ({ ...prev, [removed.shelf]: prev[removed.shelf] - 1 }));
-      toast.success('Removed from shelf');
+      toast.success(t('toastRemoved'));
       closeActions();
     } catch (e) { toast.error(e.message); }
     finally { setActionLoading(false); }
@@ -237,7 +240,7 @@ export default function ShelfPage() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 600 }}>{logBook.title}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                {logBook.pages ? `at ${logBook.current_page} / ${logBook.pages}p` : 'Log progress'}
+                {logBook.pages ? t('logAt', logBook.current_page, logBook.pages) : t('logProgress')}
               </div>
             </div>
             {logBook.pages && (
@@ -248,7 +251,7 @@ export default function ShelfPage() {
                     fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-ui)',
                     background: mode === m ? 'var(--text)' : 'transparent',
                     color: mode === m ? 'var(--bg)' : 'var(--muted)', transition: 'all .15s',
-                  }}>{m === 'page' ? 'Page' : '%'}</button>
+                  }}>{m === 'page' ? 'Page' : '%'}{/* universal labels */}</button>
                 ))}
               </div>
             )}
@@ -279,7 +282,7 @@ export default function ShelfPage() {
 
           {rp && logBook.pages && (
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12, paddingLeft: 4 }}>
-              {mode === 'pct' ? `≈ page ${rp} of ${logBook.pages}` : `${pctHint}% of the book`}
+              {mode === 'pct' ? t('logHintPage', rp, logBook.pages) : t('logHintPct', pctHint)}
             </div>
           )}
 
@@ -297,15 +300,15 @@ export default function ShelfPage() {
                 style={{ width: 18, height: 18, accentColor: 'var(--accent)', flexShrink: 0 }}
               />
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>🎉 Mark as finished</div>
-                <div style={{ fontSize: 12, color: 'var(--muted)' }}>Move this book to your Finished shelf</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{t('logMarkFinished')}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{t('logMarkFinishedSub')}</div>
               </div>
             </label>
           )}
 
           <input
             type="text" value={note} onChange={e => setNote(e.target.value)}
-            placeholder="Leave a note… (optional)"
+            placeholder={t('logNotePlaceholder')}
             style={{
               width: '100%', padding: '10px 14px', fontSize: 14,
               fontFamily: 'var(--font-ui)',
@@ -319,7 +322,7 @@ export default function ShelfPage() {
             disabled={!value || !resolvedPage() || saving}
             onClick={handleLog}
           >
-            {saving ? 'Saving…' : markFinished ? '🎉 Save & finish book' : 'Save progress'}
+            {saving ? t('saving') : markFinished ? t('logSaveFinish') : t('logSave')}
           </button>
         </Sheet>
       )}
@@ -335,23 +338,23 @@ export default function ShelfPage() {
             </div>
           </div>
           {loadingReview ? (
-            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Loading…</div>
+            <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('loading')}</div>
           ) : (<>
             <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500, marginBottom: 10 }}>
-              Rating <span style={{ fontWeight: 400 }}>(optional)</span>
+              {t('reviewRating')} <span style={{ fontWeight: 400 }}>{t('optional')}</span>
             </div>
             <div style={{ marginBottom: 16 }}>
               <StarRating value={rating} onChange={setRating} size={28} />
               {rating > 0 && (
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-                  {['','Didn\'t like it','It was ok','Liked it','Really liked it','Loved it'][rating]}
+                  {t('ratingLabels')[rating]}
                   {' · '}
-                  <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setRating(0)}>clear</span>
+                  <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setRating(0)}>{t('ratingClear')}</span>
                 </div>
               )}
             </div>
             <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500, marginBottom: 6 }}>
-              Review <span style={{ fontWeight: 400 }}>(optional)</span>
+              {t('reviewLabel')} <span style={{ fontWeight: 400 }}>{t('optional')}</span>
             </div>
             <textarea
               value={reviewBody} onChange={e => setReviewBody(e.target.value)}
@@ -370,7 +373,7 @@ export default function ShelfPage() {
               disabled={(!rating && !reviewBody.trim()) || savingReview}
               onClick={handleSaveReview}
             >
-              {savingReview ? 'Saving…' : 'Save review'}
+              {savingReview ? t('saving') : t('reviewSave')}
             </button>
           </>)}
         </Sheet>
@@ -383,52 +386,56 @@ export default function ShelfPage() {
             <BookCover title={actionBook.title} coverUrl={coverUrl(actionBook.cover_id)} width={32} height={48} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{actionBook.title}</div>
-              <div style={{ fontSize: 12, color: 'var(--muted)' }}>{SHELF_LABELS[actionBook.shelf]}</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)' }}>{t(`shelf${actionBook.shelf.charAt(0).toUpperCase() + actionBook.shelf.slice(1)}`)}</div>
             </div>
           </div>
 
           {actionBook.shelf === 'reading' && (<>
-            <SheetBtn label="Update progress" onClick={() => { closeActions(); openLog(actionBook); }} />
-            <SheetBtn label="Mark as finished" sub="Move to Finished shelf" onClick={doFinish} disabled={actionLoading} />
-            <SheetBtn label="Write a review" onClick={() => { closeActions(); openReview(actionBook); }} />
-            <SheetBtn label="Move to Want to read" onClick={() => doMove('want')} disabled={actionLoading} />
+            <SheetBtn label={t('actionUpdate')} onClick={() => { closeActions(); openLog(actionBook); }} />
+            <SheetBtn label={t('sheetMoveFinish')} sub={t('sheetMoveFinishSub')} onClick={doFinish} disabled={actionLoading} />
+            <SheetBtn label={t('sheetReview')} onClick={() => { closeActions(); openReview(actionBook); }} />
+            <SheetBtn label={t('sheetMoveWant')} onClick={() => doMove('want')} disabled={actionLoading} />
           </>)}
 
           {actionBook.shelf === 'finished' && (<>
-            <SheetBtn label="Write a review" onClick={() => { closeActions(); openReview(actionBook); }} />
-            <SheetBtn label="Move back to Reading" onClick={() => doMove('reading')} disabled={actionLoading} />
+            <SheetBtn label={t('sheetReview')} onClick={() => { closeActions(); openReview(actionBook); }} />
+            <SheetBtn label={t('actionMoveReading')} onClick={() => doMove('reading')} disabled={actionLoading} />
           </>)}
 
           {actionBook.shelf === 'want' && (
-            <SheetBtn label="Start reading" onClick={() => doMove('reading')} disabled={actionLoading} />
+            <SheetBtn label={t('actionStartReading')} onClick={() => doMove('reading')} disabled={actionLoading} />
           )}
 
           {confirmRemove ? (
-            <SheetBtn label="Confirm remove" danger onClick={doRemove} disabled={actionLoading} />
+            <SheetBtn label={t('sheetConfirmRemove')} danger onClick={doRemove} disabled={actionLoading} />
           ) : (
-            <SheetBtn label="Remove from shelf" danger onClick={() => setConfirmRemove(true)} />
+            <SheetBtn label={t('sheetRemove')} danger onClick={() => setConfirmRemove(true)} />
           )}
         </Sheet>
       )}
 
       <TopBar
-        title="My books"
-        subtitle={`${total} total · ${counts.finished} finished`}
+        title={t('shelfTitle')}
+        subtitle={t('shelfSubtitle', total, counts.finished)}
         trailing={<div style={{ width: 36 }} />}
       />
 
       <div className="shelf-seg">
-        {TABS.map(t => (
-          <button key={t.id} className={`shelf-seg__btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.label}<span className="shelf-seg__count">{counts[t.id]}</span>
+        {[
+          { id: 'reading',  label: t('tabReading') },
+          { id: 'finished', label: t('tabFinished') },
+          { id: 'want',     label: t('tabWant') },
+        ].map(tb => (
+          <button key={tb.id} className={`shelf-seg__btn ${tab === tb.id ? 'active' : ''}`} onClick={() => setTab(tb.id)}>
+            {tb.label}<span className="shelf-seg__count">{counts[tb.id]}</span>
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div style={{ padding: '20px 16px', color: 'var(--muted)', fontSize: 13 }}>Loading…</div>
+        <div style={{ padding: '20px 16px', color: 'var(--muted)', fontSize: 13 }}>{t('loading')}</div>
       ) : visible.length === 0 ? (
-        <div className="shelf-empty"><p>No books in {tab}.</p></div>
+        <div className="shelf-empty"><p>{t('shelfEmptyTab', t(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`))}</p></div>
       ) : (
         <div className="shelf-list">
           {visible.map(book => {
@@ -458,16 +465,16 @@ export default function ShelfPage() {
                     <ProgressBar value={pct} height={4} duo={!!book.duo_id} style={{ margin: '5px 0' }} />
                     <div className="shelf-row__status">
                       {book.duo_id
-                        ? `with ${book.duo_partner_username} · ${book.duo_streak ?? 0}d streak`
-                        : `updated ${timeAgo(book.updated_at)}`}
+                        ? t('duoRowStatus', book.duo_partner_username, book.duo_streak ?? 0)
+                        : t('updatedAgo', timeAgoI18n(book.updated_at, t))}
                     </div>
                   </>)}
 
                   {tab === 'finished' && (
-                    <div className="shelf-row__status">finished {book.finished_at ? timeAgo(book.finished_at) : ''}</div>
+                    <div className="shelf-row__status">{book.finished_at ? t('finishedAgo', timeAgoI18n(book.finished_at, t)) : ''}</div>
                   )}
                   {tab === 'want' && (
-                    <div className="shelf-row__status" style={{ color: 'var(--accent)', fontSize: 11 }}>tap to start reading</div>
+                    <div className="shelf-row__status" style={{ color: 'var(--accent)', fontSize: 11 }}>{t('tapToRead')}</div>
                   )}
                 </div>
                 {/* kebab */}
@@ -489,10 +496,3 @@ export default function ShelfPage() {
   );
 }
 
-function timeAgo(ts) {
-  if (!ts) return '';
-  const diff = (Date.now() - new Date(ts)) / 1000;
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
