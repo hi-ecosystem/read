@@ -138,6 +138,13 @@ export async function getMyReview(bookId) {
 
 // ── Stats ─────────────────────────────────────────────────────
 
+export async function addToWant(bookId) {
+  const { error } = await supabase.rpc('add_to_shelf', { p_book_id: bookId, p_shelf: 'want' });
+  if (error) throw error;
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+
 export async function getMyStats() {
   const { data, error } = await supabase.rpc('get_my_stats');
   if (error) throw error;

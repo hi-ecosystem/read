@@ -5,6 +5,7 @@ import Avatar from '../components/Avatar';
 import BookCover from '../components/BookCover';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabase';
 import { getMyDuos, getDuo, getFriends, createDuo, sendDuoMessage, endDuo, getMyShelf, logPages } from '../services/readApi';
 import { coverUrl } from '../services/openLibrary';
 import './DuoPage.css';
@@ -182,6 +183,21 @@ function DuoDetail({ duoId, myId, onBack }) {
 
   useEffect(() => {
     reload().finally(() => setLoading(false));
+  }, [duoId]);
+
+  // Realtime: обновляем дуо при новых сообщениях или изменении прогресса
+  useEffect(() => {
+    const channel = supabase
+      .channel(`duo-${duoId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'duo_messages',
+        filter: `duo_id=eq.${duoId}`,
+      }, () => getDuo(duoId).then(setDuo).catch(console.error))
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'book_shelf_items',
+      }, () => getDuo(duoId).then(setDuo).catch(console.error))
+      .subscribe();
+    return () => supabase.removeChannel(channel);
   }, [duoId]);
 
   const handleUpdatePage = async () => {
@@ -411,6 +427,55 @@ function DuoDetail({ duoId, myId, onBack }) {
   );
 }
 
+/* ─── Duo List ───────────────────────────────────────── */
+function DuoList({ duos, myId, onSelect, onCreate }) {
+  return (
+    <div className="duo-page">
+      <TopBar
+        title="Дуо"
+        trailing={
+          <button className="icon-btn" onClick={onCreate} aria-label="Новое дуо">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" viewBox="0 0 18 18">
+              <line x1="9" y1="3" x2="9" y2="15"/><line x1="3" y1="9" x2="15" y2="9"/>
+            </svg>
+          </button>
+        }
+      />
+      <div style={{ padding: '8px 16px 0' }}>
+        {duos.map(duo => {
+          const isUser1 = duo.user1?.id === myId;
+          const partner = isUser1 ? duo.user2 : duo.user1;
+          return (
+            <div
+              key={duo.id}
+              className="card duo-pick-row"
+              onClick={() => onSelect(duo.id)}
+              style={{ marginBottom: 10 }}
+            >
+              <BookCover
+                title={duo.books?.title}
+                author={duo.books?.author}
+                coverUrl={coverUrl(duo.books?.cover_id)}
+                width={44} height={66}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{duo.books?.title ?? 'Книга'}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+                  с {partner?.username ?? 'партнёром'}
+                </div>
+              </div>
+              <svg width="16" height="16" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" viewBox="0 0 16 16">
+                <polyline points="6,4 10,8 6,12"/>
+              </svg>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ height: 96 }} />
+    </div>
+  );
+}
+
 /* ─── Main ───────────────────────────────────────────── */
 export default function DuoPage() {
   const { user } = useAuth();
@@ -441,27 +506,31 @@ export default function DuoPage() {
 
   if (loading) return (
     <div className="duo-page">
-      <TopBar title="Duo" />
-      <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Loading…</div>
+      <TopBar title="Дуо" />
+      <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Загрузка…</div>
     </div>
   );
 
   if (selected) return <DuoDetail duoId={selected} myId={user?.id} onBack={() => setSelected(null)} />;
 
+  if (duos.length > 0) return (
+    <DuoList duos={duos} myId={user?.id} onSelect={setSelected} onCreate={() => setCreating(true)} />
+  );
+
   // No duos — empty state
   return (
     <div className="duo-page">
-      <TopBar title="Duo" />
+      <TopBar title="Дуо" />
       <div className="duo-empty">
         <div className="duo-empty__icon">
           <svg width="40" height="40" fill="none" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 40 40">
             <circle cx="15" cy="20" r="10"/><circle cx="25" cy="20" r="10"/>
           </svg>
         </div>
-        <div className="duo-empty__title">No active duos</div>
-        <div className="duo-empty__sub">Read a book together with a friend — shared progress, streaks and margin notes.</div>
+        <div className="duo-empty__title">Нет активных дуо</div>
+        <div className="duo-empty__sub">Читайте книгу вместе с другом — общий прогресс, стрики и заметки на полях.</div>
         <button className="btn btn-primary duo-empty__btn" onClick={() => setCreating(true)}>
-          Start a duo
+          Начать дуо
         </button>
       </div>
     </div>

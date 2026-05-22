@@ -4,7 +4,8 @@ import Avatar from '../components/Avatar';
 import BookCover from '../components/BookCover';
 import StarRating from '../components/StarRating';
 import Chip from '../components/Chip';
-import { getFeed, toggleLike } from '../services/readApi';
+import { toast } from 'react-hot-toast';
+import { getFeed, toggleLike, addToWant } from '../services/readApi';
 import { coverUrl } from '../services/openLibrary';
 import './FeedPage.css';
 
@@ -46,7 +47,7 @@ export default function FeedPage() {
         title="read"
         subtitle={`${today} · ${items.length} recent`}
         trailing={
-          <button className="icon-btn" aria-label="Search">
+          <button className="icon-btn" aria-label="Search" onClick={() => toast('Поиск скоро появится')}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 18 18">
               <circle cx="8" cy="8" r="5"/><line x1="12" y1="12" x2="16" y2="16"/>
             </svg>
@@ -95,6 +96,7 @@ export default function FeedPage() {
 function FeedCard({ item, onLikeToggle }) {
   const url = coverUrl(item.cover_id);
   const actionLabel = { started: 'started reading', finished: 'finished', rated: 'rated', checked_in: 'checked in' }[item.type] ?? item.type;
+  const [addingWant, setAddingWant] = useState(false);
 
   const handleLike = async () => {
     if (!item.review_id) return;
@@ -104,6 +106,19 @@ function FeedCard({ item, onLikeToggle }) {
     await toggleLike(item.review_id).catch(() =>
       onLikeToggle(item.id, item.liked_by_me, item.likes_count)
     );
+  };
+
+  const handleAddToWant = async () => {
+    if (!item.book_id || addingWant) return;
+    setAddingWant(true);
+    try {
+      await addToWant(item.book_id);
+      toast.success('Добавлено в «Хочу читать»');
+    } catch {
+      toast.error('Не удалось добавить');
+    } finally {
+      setAddingWant(false);
+    }
   };
 
   if (item.type === 'started') {
@@ -171,14 +186,21 @@ function FeedCard({ item, onLikeToggle }) {
                 </svg>
                 <span>{item.likes_count ?? 0}</span>
               </button>
-              <button className="social-btn">
+              <button className="social-btn" onClick={() => toast('Комментарии скоро появятся')}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 18 18">
                   <path d="M15 10a3 3 0 0 1-3 3H6l-3 3V5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3z"/>
                 </svg>
                 <span>{item.comments_count ?? 0}</span>
               </button>
             </div>
-            <span className="feed-card__want">add to · want to read</span>
+            <button
+              className="feed-card__want"
+              onClick={handleAddToWant}
+              disabled={addingWant}
+              style={{ background: 'none', border: 'none', cursor: addingWant ? 'not-allowed' : 'pointer', padding: 0, fontFamily: 'inherit' }}
+            >
+              {addingWant ? 'Добавляю…' : 'add to · want to read'}
+            </button>
           </div>
         </>
       )}
