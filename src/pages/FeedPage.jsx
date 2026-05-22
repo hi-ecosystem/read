@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import Avatar from '../components/Avatar';
 import BookCover from '../components/BookCover';
@@ -94,6 +95,7 @@ export default function FeedPage() {
 }
 
 function FeedCard({ item, onLikeToggle }) {
+  const navigate = useNavigate();
   const url = coverUrl(item.cover_id);
   const actionLabel = { started: 'started reading', finished: 'finished', rated: 'rated', checked_in: 'checked in' }[item.type] ?? item.type;
   const [addingWant, setAddingWant] = useState(false);
@@ -121,13 +123,19 @@ function FeedCard({ item, onLikeToggle }) {
     }
   };
 
+  const goToProfile = (username) => {
+    if (username) navigate(`/user/${username}`);
+  };
+
   if (item.type === 'started') {
     return (
       <div className="card feed-card feed-card--compact">
         <div className="feed-card__row">
-          <Avatar name={item.username} size={36} />
+          <button style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }} onClick={() => goToProfile(item.username)}>
+            <Avatar name={item.username} size={36} />
+          </button>
           <div style={{ flex: 1 }}>
-            <span className="feed-card__name">{item.username}</span>{' '}
+            <span className="feed-card__name" style={{ cursor: 'pointer' }} onClick={() => goToProfile(item.username)}>{item.username}</span>{' '}
             <span className="feed-card__action">{actionLabel}</span>
             <div className="feed-card__meta">{timeAgo(item.created_at)}{item.pages ? ` · ${item.pages}p` : ''}</div>
           </div>
@@ -140,15 +148,24 @@ function FeedCard({ item, onLikeToggle }) {
   return (
     <div className="card feed-card">
       <div className="feed-card__header">
-        <Avatar name={item.username} size={36} />
+        <button style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }} onClick={() => goToProfile(item.username)}>
+          <Avatar name={item.username} size={36} />
+        </button>
         <div style={{ flex: 1 }}>
           <div>
-            <span className="feed-card__name">{item.username}</span>{' '}
+            <span className="feed-card__name" style={{ cursor: 'pointer' }} onClick={() => goToProfile(item.username)}>{item.username}</span>{' '}
             <span className="feed-card__action">{actionLabel}</span>
           </div>
           <div className="feed-card__meta">
             {timeAgo(item.created_at)}
-            {item.duo_partner_username ? ` · with ${item.duo_partner_username}` : ''}
+            {item.duo_partner_username ? (
+              <>
+                {' · with '}
+                <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => goToProfile(item.duo_partner_username)}>
+                  {item.duo_partner_username}
+                </span>
+              </>
+            ) : null}
           </div>
         </div>
         {item.duo_id && <Chip variant="duo">duo</Chip>}

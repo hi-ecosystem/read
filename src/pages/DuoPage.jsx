@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import TopBar from '../components/TopBar';
 import Avatar from '../components/Avatar';
@@ -168,6 +169,7 @@ function CreateDuoFlow({ onClose, onCreated }) {
 
 /* ─── Duo Detail ─────────────────────────────────────── */
 function DuoDetail({ duoId, myId, onBack }) {
+  const navigate = useNavigate();
   const [duo, setDuo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
@@ -309,7 +311,7 @@ function DuoDetail({ duoId, myId, onBack }) {
       )}
 
       <TopBar
-        title={`You & ${duo.partner_username ?? 'partner'}`}
+        title={`Вы & ${duo.partner_username ?? 'партнёр'}`}
         onBack={onBack}
         trailing={
           <button className="icon-btn" onClick={() => setShowMenu(true)}>
@@ -371,8 +373,10 @@ function DuoDetail({ duoId, myId, onBack }) {
           <div className="duo-progress__divider" />
           <div className="duo-col">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <button style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => duo.partner_username && navigate(`/user/${duo.partner_username}`)}>
               <Avatar name={duo.partner_username ?? '?'} size={24} />
-              <span style={{ fontSize: 12, fontWeight: 600 }}>{duo.partner_username ?? 'Partner'}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--border)' }}>{duo.partner_username ?? 'Партнёр'}</span>
+            </button>
             </div>
             <div><span className="mono" style={{ fontSize: 22, fontWeight: 500 }}>{partnerPage}</span><span className="mono" style={{ fontSize: 12, color: 'var(--muted)' }}> / {pages}</span></div>
             <ProgressBar value={partnerPct} height={6} duo={false} style={{ margin: '6px 0' }} />

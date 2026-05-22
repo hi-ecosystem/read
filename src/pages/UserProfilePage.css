@@ -1,0 +1,173 @@
+.profile-page {
+  background: var(--bg);
+  min-height: 100dvh;
+}
+
+/* ── Header ── */
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 20px 20px;
+  gap: 10px;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-editorial);
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.profile-username {
+  font-family: var(--font-editorial);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.profile-since {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Stats row ── */
+.profile-stats {
+  display: flex;
+  margin: 0 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.profile-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 14px 8px;
+}
+
+.profile-stat + .profile-stat {
+  border-left: 1px solid var(--border);
+}
+
+.profile-stat__value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.profile-stat__label {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ── Section title ── */
+.profile-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 16px 10px;
+}
+
+/* ── Book row ── */
+.profile-book-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.profile-book-row:last-child {
+  border-bottom: none;
+}
+
+.profile-book-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-book-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-book-author {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.profile-book-review {
+  font-size: 13px;
+  color: var(--text-soft, var(--text));
+  line-height: 1.45;
+  margin-top: 6px;
+  opacity: 0.85;
+}
+
+.profile-book-date {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Stars ── */
+.profile-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.profile-star {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.profile-star--empty {
+  color: var(--border);
+}
+
+/* ── Empty ── */
+.profile-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ── Not found ── */
+.profile-not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60dvh;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 15px;
+}

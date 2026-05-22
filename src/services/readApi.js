@@ -138,6 +138,12 @@ export async function getMyReview(bookId) {
 
 // ── Stats ─────────────────────────────────────────────────────
 
+export async function getUserProfile(username) {
+  const { data, error } = await supabase.rpc('get_user_profile', { p_username: username });
+  if (error) throw error;
+  return data; // null если пользователь не найден
+}
+
 export async function addToWant(bookId) {
   const { error } = await supabase.rpc('add_to_shelf', { p_book_id: bookId, p_shelf: 'want' });
   if (error) throw error;
