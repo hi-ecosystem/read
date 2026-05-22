@@ -138,6 +138,13 @@ export async function getMyReview(bookId) {
 
 // ── Stats ─────────────────────────────────────────────────────
 
+export async function searchUsers(query) {
+  if (!query || query.trim().length < 1) return [];
+  const { data, error } = await supabase.rpc('search_users', { p_query: query.trim() });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getUserProfile(username) {
   const { data, error } = await supabase.rpc('get_user_profile', { p_username: username });
   if (error) throw error;
