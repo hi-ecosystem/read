@@ -6,6 +6,36 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 
+function LangToggle() {
+  const { lang, setLang, t } = useLang();
+  const toggle = (next) => {
+    if (next !== lang) setLang(next);
+  };
+  return (
+    <div style={{ margin: '0 16px 12px', display: 'flex', gap: 6 }}>
+      {['ru', 'en'].map(l => (
+        <button
+          key={l}
+          onClick={() => toggle(l)}
+          style={{
+            flex: 1, padding: '10px 0',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: l === lang ? 'var(--text)' : 'var(--surface)',
+            color:      l === lang ? 'var(--bg)'   : 'var(--muted)',
+            fontFamily: 'var(--font-ui)', fontWeight: 700,
+            fontSize: 13, letterSpacing: '0.05em',
+            cursor: l === lang ? 'default' : 'pointer',
+            textTransform: 'uppercase',
+          }}
+        >
+          {l === 'ru' ? 'Русский' : 'English'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function StatBox({ value, label }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '14px 8px' }}>
@@ -78,6 +108,9 @@ export default function MePage() {
           </div>
         </>)}
       </div>
+
+      {/* Language toggle */}
+      <LangToggle />
 
       {/* Logout */}
       <div style={{ margin: '0 16px' }}>
