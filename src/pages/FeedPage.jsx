@@ -11,7 +11,9 @@ import './FeedPage.css';
 const FILTERS = ['All', 'Friends', 'Duos', 'Reviews'];
 
 function timeAgo(ts) {
+  if (!ts) return '';
   const diff = (Date.now() - new Date(ts)) / 1000;
+  if (!isFinite(diff) || diff < 0) return '';
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   return `${Math.floor(diff / 86400)}d`;

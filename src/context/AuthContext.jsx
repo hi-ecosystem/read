@@ -9,26 +9,53 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const init = async () => {
-      const hash = window.location.hash;
-      if (hash.includes('access_token=')) {
-        const p = new URLSearchParams(hash.substring(1));
-        const at = p.get('access_token'), rt = p.get('refresh_token');
-        if (at && rt) {
-          const { data, error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt });
+      try {
+        const raw = window.location.hash;
+
+        // Fast path: SSO token from hi-dashboard
+        if (raw.includes('access_token=')) {
+          const p = new URLSearchParams(raw.substring(1));
+          const at = p.get('access_token');
+          const rt = p.get('refresh_token');
           window.history.replaceState(null, '', window.location.pathname);
-          if (!error && data.session) { setUser(data.session.user); setLoading(false); return; }
+
+          if (at && rt) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: at,
+              refresh_token: rt,
+            });
+            if (!error && data?.session) {
+              setUser(data.session.user);
+              setLoading(false);
+              return;
+            }
+          }
         }
+
+        // Normal path: persisted session in localStorage
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+      } catch (err) {
+        console.error('Auth init error:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
     };
+
     init();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_e, s) => setUser(s?.user ?? null)
+    );
     return () => subscription.unsubscribe();
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);
