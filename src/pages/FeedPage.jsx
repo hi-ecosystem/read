@@ -8,9 +8,10 @@ import Chip from '../components/Chip';
 import { toast } from 'react-hot-toast';
 import { getFeed, toggleLike, addToWant, searchUsers } from '../services/readApi';
 import { coverUrl } from '../services/openLibrary';
+import { useLang } from '../context/LangContext';
 import './FeedPage.css';
 
-const FILTERS = ['All', 'Friends', 'Duos', 'Reviews'];
+const FILTER_KEYS = ['All', 'Friends', 'Duos', 'Reviews'];
 
 function timeAgo(ts) {
   if (!ts) return '';
@@ -23,12 +24,12 @@ function timeAgo(ts) {
 
 export default function FeedPage() {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [filter, setFilter] = useState('All');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
-  // Поиск пользователей
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -85,13 +86,12 @@ export default function FeedPage() {
   return (
     <div className="feed-page">
 
-      {/* ── Поисковый оверлей ── */}
+      {/* ── Search overlay ── */}
       {showSearch && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 300,
           background: 'var(--bg)', display: 'flex', flexDirection: 'column',
         }}>
-          {/* Строка поиска */}
           <div style={{
             display: 'flex', gap: 10, padding: '12px 16px',
             borderBottom: '1px solid var(--border)', alignItems: 'center',
@@ -108,7 +108,7 @@ export default function FeedPage() {
                 ref={searchInputRef}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Имя пользователя…"
+                placeholder={t('searchPlaceholder')}
                 style={{
                   flex: 1, border: 'none', background: 'none', outline: 'none',
                   fontSize: 15, fontFamily: 'var(--font-ui)', color: 'var(--text)',
@@ -123,23 +123,22 @@ export default function FeedPage() {
               onClick={closeSearch}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--accent)', fontFamily: 'var(--font-ui)', fontWeight: 600, padding: '8px 0', whiteSpace: 'nowrap' }}
             >
-              Отмена
+              {t('searchCancel')}
             </button>
           </div>
 
-          {/* Результаты */}
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {searching && (
-              <div style={{ padding: '20px 16px', color: 'var(--muted)', fontSize: 13, textAlign: 'center' }}>Поиск…</div>
+              <div style={{ padding: '20px 16px', color: 'var(--muted)', fontSize: 13, textAlign: 'center' }}>{t('searchSearching')}</div>
             )}
             {!searching && searchQuery && searchResults.length === 0 && (
               <div style={{ padding: '40px 16px', color: 'var(--muted)', fontSize: 14, textAlign: 'center' }}>
-                Пользователь «{searchQuery}» не найден
+                {t('searchNotFound', searchQuery)}
               </div>
             )}
             {!searching && !searchQuery && (
               <div style={{ padding: '40px 16px', color: 'var(--muted)', fontSize: 14, textAlign: 'center' }}>
-                Начни вводить имя пользователя
+                {t('searchPrompt')}
               </div>
             )}
             {searchResults.map(u => (
@@ -167,7 +166,7 @@ export default function FeedPage() {
         title="read"
         subtitle={`${today} · ${items.length} recent`}
         trailing={
-          <button className="icon-btn" aria-label="Поиск" onClick={openSearch}>
+          <button className="icon-btn" aria-label="Search" onClick={openSearch}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 18 18">
               <circle cx="8" cy="8" r="5"/><line x1="12" y1="12" x2="16" y2="16"/>
             </svg>
@@ -176,7 +175,7 @@ export default function FeedPage() {
       />
 
       <div className="feed-filters">
-        {FILTERS.map(f => (
+        {FILTER_KEYS.map(f => (
           <Chip key={f} variant={f === filter ? 'dark' : 'default'} onClick={() => setFilter(f)}>{f}</Chip>
         ))}
       </div>
@@ -187,9 +186,9 @@ export default function FeedPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="feed-empty">
-          <p>Пока нет активности друзей.</p>
+          <p>{t('feedEmpty')}</p>
           <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
-            Найди друзей через поиск 🔍
+            {t('feedEmptyHint')}
           </span>
         </div>
       ) : (
@@ -215,8 +214,14 @@ export default function FeedPage() {
 
 function FeedCard({ item, onLikeToggle }) {
   const navigate = useNavigate();
+  const { t } = useLang();
   const url = coverUrl(item.cover_id);
-  const actionLabel = { started: 'started reading', finished: 'finished', rated: 'rated', checked_in: 'checked in' }[item.type] ?? item.type;
+  const actionLabel = {
+    started:    t('actStarted'),
+    finished:   t('actFinished'),
+    rated:      t('actRated'),
+    checked_in: t('actCheckedIn'),
+  }[item.type] ?? item.type;
   const [addingWant, setAddingWant] = useState(false);
 
   const handleLike = async () => {
@@ -234,9 +239,9 @@ function FeedCard({ item, onLikeToggle }) {
     setAddingWant(true);
     try {
       await addToWant(item.book_id);
-      toast.success('Добавлено в «Хочу читать»');
+      toast.success(t('addToWant'));
     } catch {
-      toast.error('Не удалось добавить');
+      toast.error(t('addError'));
     } finally {
       setAddingWant(false);
     }
@@ -279,7 +284,7 @@ function FeedCard({ item, onLikeToggle }) {
             {timeAgo(item.created_at)}
             {item.duo_partner_username ? (
               <>
-                {' · with '}
+                {' · '}{t('withLabel')}{' '}
                 <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => goToProfile(item.duo_partner_username)}>
                   {item.duo_partner_username}
                 </span>
@@ -322,7 +327,7 @@ function FeedCard({ item, onLikeToggle }) {
                 </svg>
                 <span>{item.likes_count ?? 0}</span>
               </button>
-              <button className="social-btn" onClick={() => toast('Комментарии скоро появятся')}>
+              <button className="social-btn" onClick={() => toast(t('commingSoon'))}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 18 18">
                   <path d="M15 10a3 3 0 0 1-3 3H6l-3 3V5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3z"/>
                 </svg>
@@ -335,7 +340,7 @@ function FeedCard({ item, onLikeToggle }) {
               disabled={addingWant}
               style={{ background: 'none', border: 'none', cursor: addingWant ? 'not-allowed' : 'pointer', padding: 0, fontFamily: 'inherit' }}
             >
-              {addingWant ? 'Добавляю…' : 'add to · want to read'}
+              {addingWant ? t('addingWant') : t('addToWant')}
             </button>
           </div>
         </>

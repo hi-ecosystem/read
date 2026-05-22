@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LangProvider } from './context/LangContext';
 import BottomNav from './components/BottomNav';
 import FeedPage from './pages/FeedPage';
 import ShelfPage from './pages/ShelfPage';
@@ -43,11 +44,13 @@ function AppShell() {
 
 export default function App() {
   return (
+    <LangProvider>
     <AuthProvider>
       <BrowserRouter>
         <Toaster position="top-center" toastOptions={{ duration: 3000, style: { borderRadius: 12, fontFamily: 'inherit', fontSize: 14 } }} />
         <AppShell />
       </BrowserRouter>
     </AuthProvider>
+    </LangProvider>
   );
 }

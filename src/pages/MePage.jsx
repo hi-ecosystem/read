@@ -4,6 +4,7 @@ import Avatar from '../components/Avatar';
 import { getMyStats } from '../services/readApi';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LangContext';
 
 function StatBox({ value, label }) {
   return (
@@ -18,6 +19,7 @@ function StatBox({ value, label }) {
 
 export default function MePage() {
   const { user } = useAuth();
+  const { t } = useLang();
   const [stats, setStats]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -44,7 +46,7 @@ export default function MePage() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100dvh' }}>
-      <TopBar title="Me" trailing={<div style={{ width: 36 }} />} />
+      <TopBar title={t('meTitle')} trailing={<div style={{ width: 36 }} />} />
 
       {/* Profile header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px 20px', gap: 12 }}>
@@ -58,21 +60,21 @@ export default function MePage() {
       {/* Stats grid */}
       <div style={{ margin: '0 16px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Loading…</div>
+          <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>{t('loading')}</div>
         ) : (<>
           <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
-            <StatBox value={stats?.books_reading}  label="Reading" />
+            <StatBox value={stats?.books_reading}  label={t('statReading')} />
             <div style={{ width: 1, background: 'var(--border)' }} />
-            <StatBox value={stats?.books_finished} label="Finished" />
+            <StatBox value={stats?.books_finished} label={t('statFinished')} />
             <div style={{ width: 1, background: 'var(--border)' }} />
-            <StatBox value={stats?.books_want}     label="Want" />
+            <StatBox value={stats?.books_want}     label={t('statWant')} />
           </div>
           <div style={{ display: 'flex' }}>
-            <StatBox value={stats?.pages_read?.toLocaleString()} label="Pages read" />
+            <StatBox value={stats?.pages_read?.toLocaleString()} label={t('statPages')} />
             <div style={{ width: 1, background: 'var(--border)' }} />
-            <StatBox value={stats?.reviews_written} label="Reviews" />
+            <StatBox value={stats?.reviews_written} label={t('statReviews')} />
             <div style={{ width: 1, background: 'var(--border)' }} />
-            <StatBox value={stats?.duos_active}    label="Active duos" />
+            <StatBox value={stats?.duos_active}    label={t('statDuos')} />
           </div>
         </>)}
       </div>
@@ -89,7 +91,7 @@ export default function MePage() {
             cursor: loggingOut ? 'not-allowed' : 'pointer',
           }}
         >
-          {loggingOut ? 'Signing out…' : 'Sign out'}
+          {loggingOut ? t('signingOut') : t('signOut')}
         </button>
       </div>
 
