@@ -28,11 +28,17 @@ function getWeekRange(lang) {
   return `${months[monday.getMonth()]} ${monday.getDate()} – ${months[sunday.getMonth()]} ${sunday.getDate()}`;
 }
 
+const BookmarkIcon = () => (
+  <svg width="9" height="11" viewBox="0 0 9 11" fill="currentColor">
+    <path d="M0 0h9v11L4.5 8 0 11z"/>
+  </svg>
+);
+
 // Badge config per shelf
 const SHELF_BADGE = {
-  finished: { icon: '✓', cls: 'finished' },
-  reading:  { icon: '●', cls: 'reading'  },
-  want:     { icon: '♡', cls: 'want'     },
+  finished: { icon: '✓',            cls: 'finished' },
+  reading:  { icon: <BookmarkIcon/>, cls: 'reading'  },
+  want:     { icon: '♡',            cls: 'want'     },
 };
 
 export default function WeeklyPicks({ picks }) {
