@@ -135,6 +135,20 @@ export async function upsertReview(bookId, rating, body) {
     p_body:    body    || null,
   });
   if (error) throw error;
+
+  // Fire-and-forget: notify friends (deduped server-side — only fires on first review)
+  if (rating || body) {
+    supabase.functions.invoke('notify-review', { body: { book_id: bookId } }).catch(() => {});
+  }
+}
+
+export async function setNotifyFriendReviews(value) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('users')
+    .update({ notify_friend_reviews: value })
+    .eq('id', user.id);
+  if (error) throw error;
 }
 
 export async function getMyReview(bookId) {

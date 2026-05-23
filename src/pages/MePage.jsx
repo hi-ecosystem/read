@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import Avatar from '../components/Avatar';
-import { getMyStats, getPendingRequests, respondToFriendRequest, searchUsers, setShowReadingProgress, setProfilePublic } from '../services/readApi';
+import { getMyStats, getPendingRequests, respondToFriendRequest, searchUsers, setShowReadingProgress, setProfilePublic, setNotifyFriendReviews } from '../services/readApi';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
@@ -60,6 +60,7 @@ export default function MePage() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [showProgress, setShowProgress] = useState(true);
   const [profilePublic, setProfilePublicState] = useState(true);
+  const [notifyReviews, setNotifyReviewsState] = useState(true);
 
   // Friend requests
   const [pending, setPending]       = useState([]);
@@ -82,6 +83,9 @@ export default function MePage() {
         }
         if (data?.profile_public !== undefined) {
           setProfilePublicState(data.profile_public);
+        }
+        if (data?.notify_friend_reviews !== undefined) {
+          setNotifyReviewsState(data.notify_friend_reviews);
         }
       })
       .catch(console.error)
@@ -106,6 +110,15 @@ export default function MePage() {
       await setProfilePublic(val);
     } catch {
       setProfilePublicState(!val); // rollback
+    }
+  };
+
+  const handleToggleNotifyReviews = async (val) => {
+    setNotifyReviewsState(val);
+    try {
+      await setNotifyFriendReviews(val);
+    } catch {
+      setNotifyReviewsState(!val); // rollback
     }
   };
 
@@ -387,12 +400,11 @@ export default function MePage() {
         </div>
 
         {/* Profile privacy toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{t('settingPrivacy')}</div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{t('settingPrivacySub')}</div>
           </div>
-          {/* iOS-style toggle */}
           <button
             role="switch"
             aria-checked={profilePublic}
@@ -401,18 +413,38 @@ export default function MePage() {
               width: 44, height: 26, borderRadius: 13, border: 'none',
               background: profilePublic ? 'var(--accent)' : 'var(--border)',
               cursor: 'pointer', flexShrink: 0, position: 'relative',
-              transition: 'background 0.2s',
-              padding: 0,
+              transition: 'background 0.2s', padding: 0,
             }}
           >
             <span style={{
-              position: 'absolute', top: 3,
-              left: profilePublic ? 21 : 3,
-              width: 20, height: 20, borderRadius: '50%',
-              background: '#fff',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-              transition: 'left 0.2s',
-              display: 'block',
+              position: 'absolute', top: 3, left: profilePublic ? 21 : 3,
+              width: 20, height: 20, borderRadius: '50%', background: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.25)', transition: 'left 0.2s', display: 'block',
+            }} />
+          </button>
+        </div>
+
+        {/* Friend review notifications toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{t('settingNotifyReviews')}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{t('settingNotifyReviewsSub')}</div>
+          </div>
+          <button
+            role="switch"
+            aria-checked={notifyReviews}
+            onClick={() => handleToggleNotifyReviews(!notifyReviews)}
+            style={{
+              width: 44, height: 26, borderRadius: 13, border: 'none',
+              background: notifyReviews ? 'var(--accent)' : 'var(--border)',
+              cursor: 'pointer', flexShrink: 0, position: 'relative',
+              transition: 'background 0.2s', padding: 0,
+            }}
+          >
+            <span style={{
+              position: 'absolute', top: 3, left: notifyReviews ? 21 : 3,
+              width: 20, height: 20, borderRadius: '50%', background: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.25)', transition: 'left 0.2s', display: 'block',
             }} />
           </button>
         </div>
