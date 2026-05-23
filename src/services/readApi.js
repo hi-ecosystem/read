@@ -283,5 +283,6 @@ export async function getWeeklyPicks() {
     author:   b.author,
     coverId:  b.cover_id,
     coverUrl: b.cover_url,
+    myShelf:  b.my_shelf ?? null,   // 'reading' | 'finished' | 'want' | null
   }));
 }

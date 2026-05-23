@@ -212,7 +212,7 @@ export const strings = {
 
     // ── Weekly picks ─────────────────────────────────────────────
     weeklyPicksTitle: 'Подборка недели',
-    weeklyPicksHint:  'Нажми на обложку — добавлю в «Хочу читать»',
+    weeklyPicksHint:  'Нажми незнакомую обложку — добавлю в «Хочу читать»',
   },
 
   en: {
@@ -423,7 +423,7 @@ export const strings = {
 
     // ── Weekly picks ─────────────────────────────────────────────
     weeklyPicksTitle: 'Books of the Week',
-    weeklyPicksHint:  'Tap a cover to add to Want to Read',
+    weeklyPicksHint:  'Tap an unfamiliar cover to add to Want to Read',
   },
 }
 

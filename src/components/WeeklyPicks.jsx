@@ -8,7 +8,7 @@ import './WeeklyPicks.css';
 
 function getWeekRange(lang) {
   const now = new Date();
-  const day = now.getDay(); // 0=Sun
+  const day = now.getDay();
   const monday = new Date(now);
   monday.setDate(now.getDate() + (day === 0 ? -6 : 1 - day));
   const sunday = new Date(monday);
@@ -28,6 +28,13 @@ function getWeekRange(lang) {
   return `${months[monday.getMonth()]} ${monday.getDate()} – ${months[sunday.getMonth()]} ${sunday.getDate()}`;
 }
 
+// Badge config per shelf
+const SHELF_BADGE = {
+  finished: { icon: '✓', cls: 'finished' },
+  reading:  { icon: '●', cls: 'reading'  },
+  want:     { icon: '♡', cls: 'want'     },
+};
+
 export default function WeeklyPicks({ picks }) {
   const { t, lang } = useLang();
   const [adding, setAdding] = useState(null);
@@ -36,7 +43,17 @@ export default function WeeklyPicks({ picks }) {
 
   const weekRange = getWeekRange(lang);
 
-  const handleAdd = async (pick) => {
+  const handleTap = async (pick) => {
+    // Already on shelf — just inform, don't re-add
+    if (pick.myShelf) {
+      const labels = {
+        ru: { finished: 'Уже прочитана', reading: 'Уже читаешь', want: 'Уже в списке' },
+        en: { finished: 'Already read',  reading: 'Currently reading', want: 'Already in list' },
+      };
+      toast(labels[lang]?.[pick.myShelf] ?? '');
+      return;
+    }
+
     if (adding) return;
     setAdding(pick.bookId);
     try {
@@ -61,14 +78,17 @@ export default function WeeklyPicks({ picks }) {
 
       <div className="weekly-picks__books">
         {picks.map((pick) => {
-          const url = resolveBookCover(pick.coverId, pick.coverUrl);
+          const url     = resolveBookCover(pick.coverId, pick.coverUrl);
           const isAdding = adding === pick.bookId;
+          const badge   = pick.myShelf ? SHELF_BADGE[pick.myShelf] : null;
+          const onShelf = !!pick.myShelf;
+
           return (
             <button
               key={pick.bookId}
-              className={`weekly-picks__book${isAdding ? ' weekly-picks__book--adding' : ''}`}
-              onClick={() => handleAdd(pick)}
-              disabled={!!adding}
+              className={`weekly-picks__book${isAdding ? ' weekly-picks__book--adding' : ''}${onShelf ? ' weekly-picks__book--on-shelf' : ''}`}
+              onClick={() => handleTap(pick)}
+              disabled={isAdding}
             >
               <div className="weekly-picks__cover-wrap">
                 <BookCover
@@ -78,6 +98,15 @@ export default function WeeklyPicks({ picks }) {
                   width={84}
                   height={124}
                 />
+                {/* Dimming overlay for books on shelf */}
+                {onShelf && <div className="weekly-picks__cover-dim" />}
+                {/* Shelf status badge */}
+                {badge && (
+                  <div className={`weekly-picks__badge weekly-picks__badge--${badge.cls}`}>
+                    {badge.icon}
+                  </div>
+                )}
+                {/* Adding spinner overlay */}
                 {isAdding && <div className="weekly-picks__cover-overlay" />}
               </div>
               <div className="weekly-picks__book-title">{pick.title}</div>
