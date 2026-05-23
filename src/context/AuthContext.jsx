@@ -33,6 +33,7 @@ export function AuthProvider({ children }) {
         }
 
         // Normal path: persisted session in localStorage
+        // getSession() will auto-refresh via refresh token if JWT is expired
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
       } catch (err) {
@@ -48,7 +49,20 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_e, s) => setUser(s?.user ?? null)
     );
-    return () => subscription.unsubscribe();
+
+    // iOS PWA: when suspended in background the auto-refresh timer dies.
+    // Re-hydrate the session the moment the user returns to the app.
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        supabase.auth.getSession().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   return (

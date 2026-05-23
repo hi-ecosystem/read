@@ -1,12 +1,14 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
+import { useFriendRequests } from '../context/FriendRequestContext';
 import './BottomNav.css';
 
 export default function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { t } = useLang();
+  const { pendingCount } = useFriendRequests();
 
   const tabs = [
     { id: 'feed',  labelKey: 'navFeed',  path: '/feed',  icon: (
@@ -47,7 +49,12 @@ export default function BottomNav() {
           onClick={() => navigate(tab.path)}
           aria-label={t(tab.labelKey)}
         >
-          {tab.icon}
+          <span className="nav-tab__icon-wrap">
+            {tab.icon}
+            {tab.id === 'me' && pendingCount > 0 && (
+              <span className="nav-badge" />
+            )}
+          </span>
           <span className="nav-tab__label">{t(tab.labelKey)}</span>
         </button>
       ))}

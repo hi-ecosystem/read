@@ -5,9 +5,10 @@ import Avatar from '../components/Avatar';
 import BookCover from '../components/BookCover';
 import StarRating from '../components/StarRating';
 import Chip from '../components/Chip';
+import ReviewSheet from '../components/ReviewSheet';
 import { toast } from 'react-hot-toast';
-import { getFeed, toggleLike, addToWant, searchUsers } from '../services/readApi';
-import { coverUrl } from '../services/openLibrary';
+import { getFeed, getPopularFeed, toggleLike, addToWant, searchUsers } from '../services/readApi';
+import { resolveBookCover } from '../services/openLibrary';
 import { useLang } from '../context/LangContext';
 import './FeedPage.css';
 
@@ -27,7 +28,9 @@ export default function FeedPage() {
   const { t } = useLang();
   const [filter, setFilter] = useState('All');
   const [items, setItems] = useState([]);
+  const [popularItems, setPopularItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [popularLoading, setPopularLoading] = useState(true);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
   const [showSearch, setShowSearch] = useState(false);
@@ -42,6 +45,10 @@ export default function FeedPage() {
       .then(setItems)
       .catch(console.error)
       .finally(() => setLoading(false));
+    getPopularFeed()
+      .then(setPopularItems)
+      .catch(console.error)
+      .finally(() => setPopularLoading(false));
   }, []);
 
   useEffect(() => {
@@ -75,11 +82,12 @@ export default function FeedPage() {
     navigate(`/user/${username}`);
   };
 
-  const filtered = items.filter(item => {
-    if (filter === 'All') return true;
+  // All tab = global popular reviews; other tabs filter the friends feed
+  const isAllTab = filter === 'All';
+  const filtered = isAllTab ? popularItems : items.filter(item => {
     if (filter === 'Friends') return !item.duo_id;
     if (filter === 'Duos') return !!item.duo_id;
-    if (filter === 'Reviews') return item.type === 'finished' || item.type === 'rated';
+    if (filter === 'Reviews') return !!(item.review_body || item.rating);
     return true;
   });
 
@@ -164,7 +172,9 @@ export default function FeedPage() {
 
       <TopBar
         title="read"
-        subtitle={`${today} · ${items.length} recent`}
+        subtitle={isAllTab
+          ? `${t('feedPopular')} · ${popularItems.length}`
+          : `${today} · ${items.length} recent`}
         trailing={
           <button className="icon-btn" aria-label="Search" onClick={openSearch}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 18 18">
@@ -180,7 +190,7 @@ export default function FeedPage() {
         ))}
       </div>
 
-      {loading ? (
+      {(isAllTab ? popularLoading : loading) ? (
         <div className="feed-loading">
           {[1, 2, 3].map(i => <div key={i} className="feed-skeleton" />)}
         </div>
@@ -197,11 +207,17 @@ export default function FeedPage() {
             <FeedCard
               key={item.id}
               item={item}
-              onLikeToggle={(id, liked, count) =>
-                setItems(prev => prev.map(it =>
-                  it.id === id ? { ...it, liked_by_me: liked, likes_count: count } : it
-                ))
-              }
+              onLikeToggle={(id, liked, count) => {
+                if (isAllTab) {
+                  setPopularItems(prev => prev.map(it =>
+                    it.id === id ? { ...it, liked_by_me: liked, likes_count: count } : it
+                  ));
+                } else {
+                  setItems(prev => prev.map(it =>
+                    it.id === id ? { ...it, liked_by_me: liked, likes_count: count } : it
+                  ));
+                }
+              }}
             />
           ))}
         </div>
@@ -215,7 +231,7 @@ export default function FeedPage() {
 function FeedCard({ item, onLikeToggle }) {
   const navigate = useNavigate();
   const { t } = useLang();
-  const url = coverUrl(item.cover_id);
+  const url = resolveBookCover(item.cover_id, item.cover_url);
   const actionLabel = {
     started:    t('actStarted'),
     finished:   t('actFinished'),
@@ -223,6 +239,11 @@ function FeedCard({ item, onLikeToggle }) {
     checked_in: t('actCheckedIn'),
   }[item.type] ?? item.type;
   const [addingWant, setAddingWant] = useState(false);
+  const [sheetItem, setSheetItem] = useState(null);
+
+  const openSheet = () => {
+    if (item.review_body || item.rating) setSheetItem(item);
+  };
 
   const handleLike = async () => {
     if (!item.review_id) return;
@@ -295,12 +316,16 @@ function FeedCard({ item, onLikeToggle }) {
         {item.duo_id && <Chip variant="duo">duo</Chip>}
       </div>
 
-      <div className="feed-card__body">
+      <div
+        className="feed-card__body"
+        onClick={openSheet}
+        style={{ cursor: (item.review_body || item.rating) ? 'pointer' : 'default' }}
+      >
         <BookCover title={item.title} author={item.author} coverUrl={url} width={60} height={88} />
         <div style={{ flex: 1 }}>
           {item.rating && <StarRating value={item.rating} />}
           {item.review_body ? (
-            <div className="feed-card__quote">
+            <div className="feed-card__quote feed-card__quote--clamp">
               <span style={{ color: 'var(--accent)' }}>"</span>
               {item.review_body}
               <span style={{ color: 'var(--accent)' }}>"</span>
@@ -344,6 +369,22 @@ function FeedCard({ item, onLikeToggle }) {
             </button>
           </div>
         </>
+      )}
+
+      {sheetItem && (
+        <ReviewSheet
+          item={sheetItem}
+          onClose={() => setSheetItem(null)}
+          onLike={item.review_id ? async () => {
+            await handleLike();
+            // keep sheet item in sync with parent item state
+            setSheetItem(prev => prev ? {
+              ...prev,
+              liked_by_me: !prev.liked_by_me,
+              likes_count: Number(prev.likes_count) + (prev.liked_by_me ? -1 : 1),
+            } : null);
+          } : undefined}
+        />
       )}
     </div>
   );

@@ -6,7 +6,7 @@ import Chip from '../components/Chip';
 import ProgressBar from '../components/ProgressBar';
 import StarRating from '../components/StarRating';
 import { getMyShelf, logPages, moveShelf, finishBook, removeFromShelf, upsertReview, getMyReview } from '../services/readApi';
-import { coverUrl } from '../services/openLibrary';
+import { resolveBookCover } from '../services/openLibrary';
 import { useLang } from '../context/LangContext';
 import './ShelfPage.css';
 
@@ -123,7 +123,7 @@ export default function ShelfPage() {
     const num = parseFloat(value);
     if (isNaN(num) || num < 0) return null;
     if (mode === 'pct') return logBook?.pages ? Math.min(logBook.pages, Math.round((num / 100) * logBook.pages)) : null;
-    return Math.round(num);
+    return logBook?.pages ? Math.min(logBook.pages, Math.round(num)) : Math.round(num);
   };
 
   const handleLog = async () => {
@@ -236,7 +236,7 @@ export default function ShelfPage() {
       {logBook && (
         <Sheet onClose={closeLog}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
-            <BookCover title={logBook.title} coverUrl={coverUrl(logBook.cover_id)} width={36} height={54} />
+            <BookCover title={logBook.title} coverUrl={resolveBookCover(logBook.cover_id, logBook.cover_url)} width={36} height={54} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 600 }}>{logBook.title}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>
@@ -263,7 +263,19 @@ export default function ShelfPage() {
               type="number" min="0"
               max={mode === 'pct' ? 100 : (logBook.pages ?? 9999)}
               value={value}
-              onChange={e => { setValue(e.target.value); setMarkFinished(false); }}
+              onChange={e => {
+                let v = e.target.value;
+                if (mode === 'page' && logBook?.pages) {
+                  const n = parseFloat(v);
+                  if (!isNaN(n) && n > logBook.pages) v = String(logBook.pages);
+                }
+                if (mode === 'pct') {
+                  const n = parseFloat(v);
+                  if (!isNaN(n) && n > 100) v = '100';
+                }
+                setValue(v);
+                setMarkFinished(false);
+              }}
               onKeyDown={e => e.key === 'Enter' && handleLog()}
               placeholder={mode === 'pct' ? '0 – 100' : '42'}
               style={{
@@ -331,7 +343,7 @@ export default function ShelfPage() {
       {reviewBook && (
         <Sheet onClose={closeReview}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
-            <BookCover title={reviewBook.title} coverUrl={coverUrl(reviewBook.cover_id)} width={36} height={54} />
+            <BookCover title={reviewBook.title} coverUrl={resolveBookCover(reviewBook.cover_id, reviewBook.cover_url)} width={36} height={54} />
             <div>
               <div style={{ fontSize: 15, fontWeight: 600 }}>{reviewBook.title}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>{reviewBook.author}</div>
@@ -383,7 +395,7 @@ export default function ShelfPage() {
       {actionBook && (
         <Sheet onClose={closeActions}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 4 }}>
-            <BookCover title={actionBook.title} coverUrl={coverUrl(actionBook.cover_id)} width={32} height={48} />
+            <BookCover title={actionBook.title} coverUrl={resolveBookCover(actionBook.cover_id, actionBook.cover_url)} width={32} height={48} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{actionBook.title}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>{t(`shelf${actionBook.shelf.charAt(0).toUpperCase() + actionBook.shelf.slice(1)}`)}</div>
@@ -440,7 +452,7 @@ export default function ShelfPage() {
         <div className="shelf-list">
           {visible.map(book => {
             const pct = book.pages ? Math.round((book.current_page / book.pages) * 100) : 0;
-            const url = coverUrl(book.cover_id);
+            const url = resolveBookCover(book.cover_id, book.cover_url);
             return (
               <div
                 key={book.book_id}

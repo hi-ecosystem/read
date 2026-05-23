@@ -27,6 +27,7 @@ export const strings = {
     // ── Feed ─────────────────────────────────────────────────────
     feedEmpty:       'Пока нет активности друзей.',
     feedEmptyHint:   'Найди друзей через поиск 🔍',
+    feedPopular:     'популярное',
     searchPlaceholder:'Имя пользователя…',
     searchCancel:    'Отмена',
     searchSearching: 'Поиск…',
@@ -108,6 +109,9 @@ export const strings = {
     addResults:      n => `${n} результатов`,
     addNoResults:    'Ничего не найдено',
     addNoResultsHint:'Ничего не найдено — попробуй название или автора.',
+    addPopularTitle: 'Популярное в read.',
+    addReadersCount: n => `${n} читателей`,
+    topReviewLabel:  'Топ-отзыв в read.',
     onShelf:         '✓ На полке',
     addToShelfLabel: 'Добавить на полку',
     addToShelf:      shelf => `Добавить · ${shelf}`,
@@ -171,6 +175,14 @@ export const strings = {
     profileWant:    'Хочет',
     profileNotFound:'Пользователь не найден',
     profileLoading: 'Загрузка…',
+    profileCurrentlyReading: n => `Читает сейчас · ${n}`,
+    settingProgress:    'Прогресс чтения',
+    settingProgressSub: 'Показывать другим, на какой странице вы находитесь',
+    settingPrivacy:     'Открытый профиль',
+    settingPrivacySub:  'Другие пользователи видят твои книги и прогресс',
+    profileWantTitle:   n => `Хочет прочитать · ${n}`,
+    profilePrivate:     '🔒 Профиль скрыт',
+    profilePrivateSub:  'Этот пользователь скрыл свои книги',
     profileFinishedAt: ts => {
       const diff = (Date.now() - new Date(ts)) / 1000
       if (diff < 86400) return 'прочитано сегодня'
@@ -179,6 +191,22 @@ export const strings = {
       return `прочитано ${Math.floor(diff / (86400 * 365))} г. назад`
     },
     profileJoined: ts => new Date(ts).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }),
+
+    // ── Friends ──────────────────────────────────────────────────
+    friendAdd:       'Добавить в друзья',
+    friendSent:      'Запрос отправлен',
+    friendAccept:    'Принять',
+    friendDecline:   'Отклонить',
+    friendRemove:    'Удалить из друзей',
+    friendFriends:   'В друзьях',
+    friendRequests:  n => `Заявки в друзья · ${n}`,
+    friendFind:      'Найти друзей',
+    friendSearchHint:'Введи имя пользователя',
+    friendNoPending: 'Нет входящих заявок',
+    friendErrSend:   'Не удалось отправить. Попробуй снова.',
+    friendAdded:     u => `${u} добавлен(а) в друзья`,
+    friendRemoved:   'Удалено из друзей',
+    friendDeclined:  'Заявка отклонена',
   },
 
   en: {
@@ -204,6 +232,7 @@ export const strings = {
     // ── Feed ─────────────────────────────────────────────────────
     feedEmpty:       'No friend activity yet.',
     feedEmptyHint:   'Find friends via search 🔍',
+    feedPopular:     'popular',
     searchPlaceholder:'Username…',
     searchCancel:    'Cancel',
     searchSearching: 'Searching…',
@@ -285,6 +314,9 @@ export const strings = {
     addResults:      n => `${n} results`,
     addNoResults:    'No results found',
     addNoResultsHint:'No results — try the title or author.',
+    addPopularTitle: 'Popular on read.',
+    addReadersCount: n => `${n} readers`,
+    topReviewLabel:  'Top review on read.',
     onShelf:         '✓ On your shelf',
     addToShelfLabel: 'Add to shelf',
     addToShelf:      shelf => `Add to ${shelf}`,
@@ -348,6 +380,14 @@ export const strings = {
     profileWant:     'Want',
     profileNotFound: 'User not found',
     profileLoading:  'Loading…',
+    profileCurrentlyReading: n => `Currently reading · ${n}`,
+    settingProgress:    'Reading progress',
+    settingProgressSub: 'Show others what page you are on',
+    settingPrivacy:     'Public profile',
+    settingPrivacySub:  'Other users can see your books and reading activity',
+    profileWantTitle:   n => `Wants to read · ${n}`,
+    profilePrivate:     '🔒 Profile is private',
+    profilePrivateSub:  'This user has hidden their book shelves',
     profileFinishedAt: ts => {
       const diff = (Date.now() - new Date(ts)) / 1000
       if (diff < 86400) return 'read today'
@@ -356,6 +396,22 @@ export const strings = {
       return `read ${Math.floor(diff / (86400 * 365))} years ago`
     },
     profileJoined: ts => new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+
+    // ── Friends ──────────────────────────────────────────────────
+    friendAdd:       'Add friend',
+    friendSent:      'Request sent',
+    friendAccept:    'Accept',
+    friendDecline:   'Decline',
+    friendRemove:    'Remove friend',
+    friendFriends:   'Friends',
+    friendRequests:  n => `Friend requests · ${n}`,
+    friendFind:      'Find friends',
+    friendSearchHint:'Enter a username',
+    friendNoPending: 'No incoming requests',
+    friendErrSend:   'Could not send. Try again.',
+    friendAdded:     u => `${u} added as a friend`,
+    friendRemoved:   'Removed from friends',
+    friendDeclined:  'Request declined',
   },
 }
 

@@ -22,3 +22,12 @@ export async function searchBooks(query) {
 export function coverUrl(coverId, size = 'M') {
   return coverId ? `${COVERS}/${coverId}-${size}.jpg` : null;
 }
+
+/**
+ * Resolve the best cover URL from DB fields.
+ * cover_url (text) wins over the numeric OL cover_id.
+ */
+export function resolveBookCover(coverId, directUrl, size = 'M') {
+  if (directUrl) return directUrl;
+  return coverUrl(coverId, size);
+}

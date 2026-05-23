@@ -30,3 +30,25 @@
 .btn-primary { background: var(--accent); color: #fff; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
 .icon-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); }
+
+/* empty state */
+.duo-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 60px 32px 40px; gap: 12px; }
+.duo-empty__icon { width: 72px; height: 72px; border-radius: 20px; background: var(--accent-tint-bg); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.duo-empty__title { font-size: 17px; font-weight: 600; color: var(--text); }
+.duo-empty__sub { font-size: 13px; color: var(--muted); line-height: 1.55; max-width: 260px; }
+.duo-empty__btn { margin-top: 8px; width: 100%; max-width: 240px; height: 44px; font-size: 14px; }
+
+/* compose */
+.duo-compose { display: flex; gap: 8px; margin-top: 12px; margin-bottom: 8px; }
+.duo-compose__input { flex: 1; padding: 10px 14px; font-size: 14px; font-family: var(--font-ui); border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); outline: none; }
+.duo-compose__input:focus { border-color: var(--accent); }
+.duo-compose__send { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.duo-compose__send:disabled { opacity: .4; cursor: not-allowed; }
+
+/* list row */
+.duo-list-row { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+.duo-pick-row { display: flex; align-items: center; gap: 12px; padding: 12px; }
+
+/* create duo flow */
+.duo-selected-preview { display: flex; align-items: center; gap: 10px; padding: 10px 0 14px; }
+.duo-confirm-card { display: flex; gap: 16px; padding: 16px; margin-bottom: 16px; }

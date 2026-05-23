@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { supabase } from '../services/supabase';
 import { getMyDuos, getDuo, getFriends, createDuo, sendDuoMessage, endDuo, getMyShelf, logPages } from '../services/readApi';
-import { coverUrl } from '../services/openLibrary';
+import { resolveBookCover } from '../services/openLibrary';
 import './DuoPage.css';
 
 function timeAgoI18n(ts, t) {
@@ -82,7 +82,7 @@ function CreateDuoFlow({ onClose, onCreated, t }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {books.map(b => (
                 <div key={b.book_id} className="card duo-pick-row" onClick={() => goToFriend(b)}>
-                  <BookCover title={b.title} author={b.author} coverUrl={coverUrl(b.cover_id)} width={40} height={60} />
+                  <BookCover title={b.title} author={b.author} coverUrl={resolveBookCover(b.cover_id, b.cover_url)} width={40} height={60} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{b.title}</div>
                     <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
@@ -105,7 +105,7 @@ function CreateDuoFlow({ onClose, onCreated, t }) {
         <div style={{ padding: '0 16px' }}>
           {/* selected book preview */}
           <div className="duo-selected-preview">
-            <BookCover title={book.title} author={book.author} coverUrl={coverUrl(book.cover_id)} width={32} height={48} />
+            <BookCover title={book.title} author={book.author} coverUrl={resolveBookCover(book.cover_id, book.cover_url)} width={32} height={48} />
             <span style={{ fontSize: 13, fontWeight: 600 }}>{book.title}</span>
           </div>
 
@@ -137,7 +137,7 @@ function CreateDuoFlow({ onClose, onCreated, t }) {
       {step === 'confirm' && (
         <div style={{ padding: '0 16px' }}>
           <div className="card duo-confirm-card">
-            <BookCover title={book.title} author={book.author} coverUrl={coverUrl(book.cover_id)} width={72} height={108} />
+            <BookCover title={book.title} author={book.author} coverUrl={resolveBookCover(book.cover_id, book.cover_url)} width={72} height={108} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: 'var(--font-editorial)', fontSize: 17, fontWeight: 600, marginBottom: 4 }}>{book.title}</div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>{book.author}</div>
@@ -206,9 +206,10 @@ function DuoDetail({ duoId, myId, onBack, t }) {
   const handleUpdatePage = async () => {
     const p = parseInt(pageInput, 10);
     if (!p || p < 1) return;
+    const clamped = duo?.pages ? Math.min(p, duo.pages) : p;
     setUpdatingPage(true);
     try {
-      await logPages(duo.book_id, p);
+      await logPages(duo.book_id, clamped);
       setPageInput('');
       setShowPageInput(false);
       reload();
@@ -250,7 +251,7 @@ function DuoDetail({ duoId, myId, onBack, t }) {
   const partnerPage = duo.partner_page ?? 0;
   const myPct = Math.round((myPage / pages) * 100);
   const partnerPct = Math.round((partnerPage / pages) * 100);
-  const url = coverUrl(duo.cover_id);
+  const url = resolveBookCover(duo.cover_id, duo.cover_url);
   const messages = duo.messages ?? [];
 
   return (
@@ -353,7 +354,12 @@ function DuoDetail({ duoId, myId, onBack, t }) {
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                 <input
                   type="number" min="1" max={pages} value={pageInput}
-                  onChange={e => setPageInput(e.target.value)}
+                  onChange={e => {
+                    let v = e.target.value;
+                    const n = parseInt(v, 10);
+                    if (!isNaN(n) && n > pages) v = String(pages);
+                    setPageInput(v);
+                  }}
                   onKeyDown={e => e.key === 'Enter' && handleUpdatePage()}
                   autoFocus placeholder={String(myPage)}
                   style={{ width: 64, padding: '4px 8px', fontSize: 16, fontFamily: 'var(--font-mono)', fontWeight: 500, border: '1px solid var(--accent)', borderRadius: 8, background: 'var(--bg)', color: 'var(--text)', outline: 'none' }}
@@ -460,7 +466,7 @@ function DuoList({ duos, myId, onSelect, onCreate, t }) {
               <BookCover
                 title={duo.books?.title}
                 author={duo.books?.author}
-                coverUrl={coverUrl(duo.books?.cover_id)}
+                coverUrl={resolveBookCover(duo.books?.cover_id, duo.books?.cover_url)}
                 width={44} height={66}
               />
               <div style={{ flex: 1 }}>
@@ -494,7 +500,7 @@ export default function DuoPage() {
     getMyDuos()
       .then(data => {
         setDuos(data);
-        if (!keepSelection && data.length >= 1) setSelected(prev => prev ?? data[0].id);
+        if (!keepSelection && data.length === 1) setSelected(prev => prev ?? data[0].id);
       })
       .catch(console.error)
       .finally(() => setLoading(false));

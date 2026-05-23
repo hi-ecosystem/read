@@ -11,6 +11,8 @@ export async function addBookToShelf(book, shelf) {
     p_pages:    book.pages ?? null,
     p_cover_id: book.coverId ?? null,
     p_subjects: book.subjects ?? [],
+    // For Google Books: coverId is null, coverUrl holds the thumbnail URL
+    p_cover_url: book.coverId ? null : (book.coverUrl ?? null),
   });
   if (upsertErr) throw upsertErr;
 
@@ -55,6 +57,18 @@ export async function getFeed() {
   const { data, error } = await supabase.rpc('get_read_feed');
   if (error) throw error;
   return data ?? [];
+}
+
+export async function getPopularFeed() {
+  const { data, error } = await supabase.rpc('get_popular_feed', { p_limit: 50 });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getBookTopReview(bookId) {
+  const { data, error } = await supabase.rpc('get_book_top_review', { p_book_id: bookId });
+  if (error) throw error;
+  return data?.[0] ?? null;
 }
 
 export async function toggleLike(reviewId) {
@@ -154,6 +168,86 @@ export async function getUserProfile(username) {
 export async function addToWant(bookId) {
   const { error } = await supabase.rpc('add_to_shelf', { p_book_id: bookId, p_shelf: 'want' });
   if (error) throw error;
+}
+
+export async function setShowReadingProgress(value) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('users')
+    .update({ show_reading_progress: value })
+    .eq('id', user.id);
+  if (error) throw error;
+}
+
+export async function setProfilePublic(value) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('users')
+    .update({ profile_public: value })
+    .eq('id', user.id);
+  if (error) throw error;
+}
+
+// ── Friends ───────────────────────────────────────────────────
+
+export async function sendFriendRequest(username) {
+  const { data, error } = await supabase.rpc('send_friend_request', { friend_username: username });
+  if (error) throw error;
+  return data; // { success, error?, friendship_id? }
+}
+
+export async function getFriendshipStatus(username) {
+  const { data, error } = await supabase.rpc('get_friendship_status', { target_username: username });
+  if (error) throw error;
+  return data; // { success, status ('none'|'pending'|'accepted'), friendship_id?, is_requester? }
+}
+
+export async function getPendingRequests() {
+  const { data, error } = await supabase.rpc('get_pending_friend_requests');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getSentRequests() {
+  const { data, error } = await supabase.rpc('get_sent_friend_requests');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function cancelFriendRequest(friendshipId) {
+  const { data, error } = await supabase.rpc('cancel_friend_request', { friendship_id: friendshipId });
+  if (error) throw error;
+  return data;
+}
+
+export async function removeFriend(friendshipId) {
+  const { data, error } = await supabase.rpc('remove_friend', { friendship_id: friendshipId });
+  if (error) throw error;
+  return data;
+}
+
+export async function respondToFriendRequest(friendshipId, action) {
+  const { data, error } = await supabase.rpc('respond_to_friend_request', {
+    friendship_id:   friendshipId,
+    response_action: action,   // 'accept' | 'decline'
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function getPopularBooks() {
+  const { data, error } = await supabase.rpc('get_popular_books', { p_limit: 20 });
+  if (error) throw error;
+  return (data ?? []).map(b => ({
+    id:       b.book_id,
+    title:    b.title,
+    author:   b.author,
+    coverId:  b.cover_id,
+    coverUrl: b.cover_url,
+    pages:    b.pages,
+    year:     b.year,
+    readers:  b.readers,
+  }));
 }
 
 // ── Stats ─────────────────────────────────────────────────────

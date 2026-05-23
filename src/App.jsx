@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LangProvider } from './context/LangContext';
+import { FriendRequestProvider } from './context/FriendRequestContext';
 import BottomNav from './components/BottomNav';
 import FeedPage from './pages/FeedPage';
 import ShelfPage from './pages/ShelfPage';
@@ -27,7 +28,7 @@ function AppShell() {
   if (!user) return <LoginPage />;
 
   return (
-    <>
+    <FriendRequestProvider>
       <Routes>
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/shelf" element={<ShelfPage />} />
@@ -38,7 +39,7 @@ function AppShell() {
         <Route path="*" element={<Navigate to="/feed" replace />} />
       </Routes>
       <BottomNav />
-    </>
+    </FriendRequestProvider>
   );
 }
 
