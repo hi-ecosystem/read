@@ -7,7 +7,8 @@ import StarRating from '../components/StarRating';
 import Chip from '../components/Chip';
 import ReviewSheet from '../components/ReviewSheet';
 import { toast } from 'react-hot-toast';
-import { getFeed, getPopularFeed, toggleLike, addToWant, searchUsers } from '../services/readApi';
+import { getFeed, getPopularFeed, toggleLike, addToWant, searchUsers, getWeeklyPicks } from '../services/readApi';
+import WeeklyPicks from '../components/WeeklyPicks';
 import { resolveBookCover } from '../services/openLibrary';
 import { useLang } from '../context/LangContext';
 import './FeedPage.css';
@@ -29,6 +30,7 @@ export default function FeedPage() {
   const [filter, setFilter] = useState('All');
   const [items, setItems] = useState([]);
   const [popularItems, setPopularItems] = useState([]);
+  const [weeklyPicks, setWeeklyPicks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [popularLoading, setPopularLoading] = useState(true);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
@@ -49,6 +51,9 @@ export default function FeedPage() {
       .then(setPopularItems)
       .catch(console.error)
       .finally(() => setPopularLoading(false));
+    getWeeklyPicks()
+      .then(setWeeklyPicks)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -189,6 +194,10 @@ export default function FeedPage() {
           <Chip key={f} variant={f === filter ? 'dark' : 'default'} onClick={() => setFilter(f)}>{f}</Chip>
         ))}
       </div>
+
+      {isAllTab && weeklyPicks.length > 0 && (
+        <WeeklyPicks picks={weeklyPicks} />
+      )}
 
       {(isAllTab ? popularLoading : loading) ? (
         <div className="feed-loading">

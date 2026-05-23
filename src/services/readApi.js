@@ -271,3 +271,17 @@ export async function getMyStats() {
   if (error) throw error;
   return data?.[0] ?? null;
 }
+
+// ── Weekly picks ──────────────────────────────────────────────
+
+export async function getWeeklyPicks() {
+  const { data, error } = await supabase.rpc('get_weekly_picks');
+  if (error) throw error;
+  return (data ?? []).map(b => ({
+    bookId:   b.book_id,
+    title:    b.title,
+    author:   b.author,
+    coverId:  b.cover_id,
+    coverUrl: b.cover_url,
+  }));
+}

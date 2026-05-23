@@ -209,6 +209,10 @@ export const strings = {
     friendAdded:     u => `${u} добавлен(а) в друзья`,
     friendRemoved:   'Удалено из друзей',
     friendDeclined:  'Заявка отклонена',
+
+    // ── Weekly picks ─────────────────────────────────────────────
+    weeklyPicksTitle: 'Подборка недели',
+    weeklyPicksHint:  'Нажми на обложку — добавлю в «Хочу читать»',
   },
 
   en: {
@@ -416,6 +420,10 @@ export const strings = {
     friendAdded:     u => `${u} added as a friend`,
     friendRemoved:   'Removed from friends',
     friendDeclined:  'Request declined',
+
+    // ── Weekly picks ─────────────────────────────────────────────
+    weeklyPicksTitle: 'Books of the Week',
+    weeklyPicksHint:  'Tap a cover to add to Want to Read',
   },
 }
 
