@@ -119,7 +119,7 @@ export const strings = {
     addSuccess:      shelf => `Добавлено в «${shelf}»`,
     addError:        'Не удалось добавить. Попробуй снова.',
     duoInvite:       'Читать как дуо?',
-    duoInviteSub:    'Пригласить друга · DoubleDo',
+    duoInviteSub:    'Пригласить друга · duo.',
 
     // ── Me ───────────────────────────────────────────────────────
     meTitle:     'Я',
@@ -330,7 +330,7 @@ export const strings = {
     addSuccess:      shelf => `Added to ${shelf}`,
     addError:        'Could not save. Try again.',
     duoInvite:       'Read this as a duo?',
-    duoInviteSub:    'Invite a friend · DoubleDo check-ins',
+    duoInviteSub:    'Invite a friend · duo. check-ins',
 
     // ── Me ───────────────────────────────────────────────────────
     meTitle:     'Me',
